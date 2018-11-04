@@ -1,7 +1,7 @@
 extern crate num_traits;
 extern crate rand;
 
-use autodiff::{Num, diff, grad};
+use autodiff::{diff, grad, Num};
 use num_traits::Float;
 
 // NOTE: we don't need approximate equality here because we compare with the chain rule derivative
@@ -44,6 +44,9 @@ fn grad_test() {
             -0.5 * t[1] * Float::exp(-t[0] * t[1] / 2.0),
             -0.5 * t[0] * Float::exp(-t[0] * t[1] / 2.0),
         ];
-        assert_eq!(grad(|x| Float::exp(-x[0] * x[1] / Num::cst(2.0)), &t), expected);
+        assert_eq!(
+            grad(|x| Float::exp(-x[0] * x[1] / Num::cst(2.0)), &t),
+            expected
+        );
     }
 }

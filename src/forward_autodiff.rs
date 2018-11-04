@@ -1,4 +1,3 @@
-
 use num_traits::{Float, FloatConst, NumCast, One, ToPrimitive, Zero};
 use std::f64;
 use std::num::FpCategory;
@@ -306,10 +305,7 @@ impl Float for Num {
         }
     }
     fn neg_zero() -> Num {
-        Num {
-            x: -0.0,
-            dx: 0.0,
-        }
+        Num { x: -0.0, dx: 0.0 }
     }
     fn min_value() -> Num {
         Num {
@@ -378,11 +374,7 @@ impl Float for Num {
     fn abs(self) -> Num {
         Num {
             x: self.x.abs(),
-            dx: if self.x >= 0.0 {
-                self.dx
-            } else {
-                -self.dx
-            },
+            dx: if self.x >= 0.0 { self.dx } else { -self.dx },
         }
     }
     fn signum(self) -> Num {
@@ -415,8 +407,7 @@ impl Float for Num {
     fn powf(self, n: Num) -> Num {
         Num {
             x: Float::powf(self.x, n.x),
-            dx: (Float::ln(self.x) * n.dx + n.x * self.dx / self.x)
-                * Float::powf(self.x, n.x),
+            dx: (Float::ln(self.x) * n.dx + n.x * self.dx / self.x) * Float::powf(self.x, n.x),
         }
     }
     fn sqrt(self) -> Num {
@@ -455,13 +446,7 @@ impl Float for Num {
         Float::log(self, Num { x: 2.0, dx: 0.0 })
     }
     fn log10(self) -> Num {
-        Float::log(
-            self,
-            Num {
-                x: 10.0,
-                dx: 0.0,
-            },
-        )
+        Float::log(self, Num { x: 10.0, dx: 0.0 })
     }
     fn max(self, other: Num) -> Num {
         Num {
@@ -625,11 +610,17 @@ impl Float for Num {
 impl Num {
     /// Create a new constant. Use this also to convert from a variable to a constant.
     pub fn cst<T: Into<f64>>(x: T) -> Num {
-        Num { x: x.into(), dx: 0.0 }
+        Num {
+            x: x.into(),
+            dx: 0.0,
+        }
     }
     /// Create a new variable. Use this also to convert from a constant to a variable.
     pub fn var<T: Into<f64>>(x: T) -> Num {
-        Num { x: x.into(), dx: 1.0 }
+        Num {
+            x: x.into(),
+            dx: 1.0,
+        }
     }
     /// Get the current derivative of this variable. This will be zero if this `Num` is a
     /// constant.
