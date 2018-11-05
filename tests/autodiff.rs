@@ -1,3 +1,4 @@
+extern crate autodiff;
 extern crate num_traits;
 extern crate rand;
 

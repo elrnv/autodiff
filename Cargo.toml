@@ -4,7 +4,6 @@ version = "0.1.0"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
 license = "Apache-2.0"
 description = "An automatic differentiation library"
-edition = "2018"
 
 homepage = "https://github.com/elrnv/autodiff"
 repository = "https://github.com/elrnv/autodiff"

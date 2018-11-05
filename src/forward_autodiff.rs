@@ -673,6 +673,21 @@ where
 }
 
 /// Evaluates the gradient of `f` at `x0`
+///
+/// # Examples
+///
+/// ```rust
+/// # extern crate autodiff;
+/// # use autodiff::*;
+/// # fn main() {
+///     // Define a multivariate function `f(x,y) = x*y^2`
+///     let f = |x: &[Num]| x[0] * x[1] * x[1];
+///
+///     // Differentiate `f` at `(1,2)`.
+///     let g = grad(f, &vec![1.0, 2.0]);
+///     println!("({}, {})", g[0], g[1]); // prints `(4, 4)`
+/// #   assert_eq!(g, vec![4.0, 4.0]);
+/// # }
 pub fn grad<F>(f: F, x0: &[f64]) -> Vec<f64>
 where
     F: Fn(&[Num]) -> Num,
