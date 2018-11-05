@@ -1,0 +1,15 @@
+language: rust
+
+rust:
+  - nightly
+  - beta
+  - stable
+
+cache: cargo
+
+script:
+  - cargo build
+  - cargo test
+
+notifications:
+email: false
