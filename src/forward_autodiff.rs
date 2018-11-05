@@ -29,7 +29,7 @@ pub struct Num {
     pub dx: f64,
 }
 
-/// Panicless conversion into `f64` type.
+/// Panic-less conversion into `f64` type.
 impl Into<f64> for Num {
     fn into(self) -> f64 {
         self.x
@@ -649,7 +649,22 @@ impl Num {
     }
 }
 
-/// Exuates the derivative of `f` at `x0`
+/// Evaluates the derivative of `f` at `x0`
+///
+/// # Examples
+///
+/// ```rust
+/// # extern crate autodiff;
+/// # use autodiff::*;
+/// # fn main() {
+///     // Define a function `f(x) = e^{-0.5*x^2}`
+///     let f = |x: Num| (-x * x / Num::cst(2.0)).exp();
+///
+///     // Differentiate `f` at zero.
+///     println!("{}", diff(f, 0.0)); // prints `0`
+/// #   assert_eq!(diff(f, 0.0), 0.0);
+/// # }
+/// ```
 pub fn diff<F>(f: F, x0: f64) -> f64
 where
     F: FnOnce(Num) -> Num,
@@ -657,7 +672,7 @@ where
     f(Num::var(x0)).deriv()
 }
 
-/// Exuates the gradient of `f` at `x0`
+/// Evaluates the gradient of `f` at `x0`
 pub fn grad<F>(f: F, x0: &[f64]) -> Vec<f64>
 where
     F: Fn(&[Num]) -> Num,
