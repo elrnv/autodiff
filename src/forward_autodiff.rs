@@ -347,8 +347,7 @@ impl Div<Num> for f32 {
 impl DivAssign for Num {
     #[inline]
     fn div_assign(&mut self, rhs: Num) {
-        self.x -= rhs.x;
-        self.dx -= rhs.dx;
+        *self = *self / rhs; // reuse quotient rule implementation
     }
 }
 
@@ -1055,6 +1054,11 @@ impl Num {
         }
     }
 
+    /// Compare two `Num`s in full, including the derivative part.
+    pub fn full_eq(&self, rhs: &Num) -> bool {
+        self.x == rhs.x && self.dx == rhs.dx
+    }
+
     /// Get the value of this variable.
     #[inline]
     pub fn value(&self) -> f64 {
@@ -1123,4 +1127,65 @@ where
     }
 
     results
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Convenience macro for comparing Nums in full.
+    macro_rules! assert_full_eq {
+        ($x:expr, $y:expr) => {
+            assert!(Num::full_eq(&$x, &$y));
+        }
+    }
+
+    #[test]
+    fn basic_arithmetic_test() {
+        // Test basic arithmetic on Num.
+        let mut x = Num::var(1.0);
+        let y = Num::var(2.0);
+
+        assert_full_eq!(-x, Num { x: -1.0, dx: -1.0 }); // negation
+
+        assert_full_eq!(x + y, Num { x: 3.0, dx: 2.0 }); // addition
+        assert_full_eq!(x + 2.0, Num { x: 3.0, dx: 1.0 }); // addition
+        assert_full_eq!(2.0 + x, Num { x: 3.0, dx: 1.0 }); // addition
+        x += y;
+        assert_full_eq!(x, Num { x: 3.0, dx: 2.0 }); // assign add
+        x += 1.0;
+        assert_full_eq!(x, Num { x: 4.0, dx: 2.0 }); // assign add
+
+        assert_full_eq!(x - y, Num { x: 2.0, dx: 1.0 }); // subtraction
+        assert_full_eq!(x - 1.0, Num { x: 3.0, dx: 2.0 }); // subtraction
+        assert_full_eq!(1.0 - x, Num { x: -3.0, dx: -2.0 }); // subtraction
+        x -= y;
+        assert_full_eq!(x, Num { x: 2.0, dx: 1.0 }); // subtract assign
+        x -= 1.0;
+        assert_full_eq!(x, Num { x: 1.0, dx: 1.0 }); // subtract assign
+
+        assert_full_eq!(x * y, Num { x: 2.0, dx: 3.0 }); // multiplication
+        assert_full_eq!(x * 2.0, Num { x: 2.0, dx: 2.0 }); // multiplication
+        assert_full_eq!(2.0 * x, Num { x: 2.0, dx: 2.0 }); // multiplication
+        x *= y;
+        assert_full_eq!(x, Num { x: 2.0, dx: 3.0 }); // multiply assign
+        x *= 2.0;
+        assert_full_eq!(x, Num { x: 4.0, dx: 6.0 }); // multiply assign
+
+        assert_full_eq!(x / y, Num { x: 2.0, dx: 2.0 }); // division
+        assert_full_eq!(x / 2.0, Num { x: 2.0, dx: 3.0 }); // division
+        assert_full_eq!(2.0 / x, Num { x: 0.5, dx: -0.75 }); // division
+        x /= y;
+        assert_full_eq!(x, Num { x: 2.0, dx: 2.0 }); // divide assign
+        x /= 2.0;
+        assert_full_eq!(x, Num { x: 1.0, dx: 1.0 }); // divide assign
+
+        assert_full_eq!(x % y, Num { x: 1.0, dx: 1.0 }); // mod
+        assert_full_eq!(x % 2.0, Num { x: 1.0, dx: 1.0 }); // mod
+        assert_full_eq!(2.0 % x, Num { x: 0.0, dx: -2.0 }); // mod
+        x %= y;
+        assert_full_eq!(x, Num { x: 1.0, dx: 1.0 }); // mod assign
+        x %= 2.0;
+        assert_full_eq!(x, Num { x: 1.0, dx: 1.0 }); // mod assign
+    }
 }
