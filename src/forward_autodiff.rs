@@ -635,6 +635,7 @@ impl Num {
             dx: 0.0,
         }
     }
+
     /// Create a new variable. Use this also to convert from a constant to a variable.
     pub fn var<T: Into<f64>>(x: T) -> Num {
         Num {
@@ -642,6 +643,12 @@ impl Num {
             dx: 1.0,
         }
     }
+
+    /// Get the value of this variable.
+    pub fn value(&self) -> f64 {
+        self.x
+    }
+
     /// Get the current derivative of this variable. This will be zero if this `Num` is a
     /// constant.
     pub fn deriv(&self) -> f64 {

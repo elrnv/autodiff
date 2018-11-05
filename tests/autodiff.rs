@@ -5,6 +5,20 @@ extern crate rand;
 use autodiff::{diff, grad, Num};
 use num_traits::Float;
 
+#[test]
+fn num_test() {
+    // Trivial tests without derivatives, which check the Num api.
+    let x = Num::var(1.0);
+    assert_eq!(x.x, 1.0);
+    assert_eq!(x.dx, 1.0);
+    assert_eq!(x.x, x.value());
+    assert_eq!(x.dx, x.deriv());
+
+    let y = Num::cst(2.0);
+    assert_eq!(y.x, y.value());
+    assert_eq!(y.dx, y.deriv());
+}
+
 // NOTE: we don't need approximate equality here because we compare with the chain rule derivative
 // expression, which means that the derivative and expected values should be identically computed.
 #[test]
