@@ -27,7 +27,7 @@ fn simple_test() {
     assert_eq!(diff(|x| x, 0.0), 1.0);
     assert_eq!(diff(|x| x * x, 0.0), 0.0);
     assert_eq!(diff(|x| x * x, 1.0), 2.0);
-    assert_eq!(diff(|x| Float::exp(-x * x / Num::cst(2.0)), 0.0), 0.0);
+    assert_eq!(diff(|x| Float::exp(-x * x / 2.0), 0.0), 0.0);
 }
 
 #[test]
@@ -60,7 +60,7 @@ fn grad_test() {
             -0.5 * t[0] * Float::exp(-t[0] * t[1] / 2.0),
         ];
         assert_eq!(
-            grad(|x| Float::exp(-x[0] * x[1] / Num::cst(2.0)), &t),
+            grad(|x| Float::exp(-x[0] * x[1] / 2.0), &t),
             expected
         );
     }
