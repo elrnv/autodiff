@@ -8,8 +8,9 @@ An auto-differentiation library.
 
 Currently supported features:
 
-  [x] Forward auto-differentiation
-  [ ] Reverse auto-differentiation
+  - [x] Forward auto-differentiation
+
+  - [ ] Reverse auto-differentiation
 
 To compute a derivative with respect to a variable using this library:
 
