@@ -1039,19 +1039,21 @@ impl Float for F {
 
 impl F {
     /// Create a new constant. Use this also to convert from a variable to a constant.
+    /// This constructor panics if `x` cannot be converted to `f64`.
     #[inline]
-    pub fn cst<T: Into<f64>>(x: T) -> F {
+    pub fn cst<T: ToPrimitive>(x: T) -> F {
         F {
-            x: x.into(),
+            x: x.to_f64().unwrap(),
             dx: 0.0,
         }
     }
 
     /// Create a new variable. Use this also to convert from a constant to a variable.
+    /// This constructor panics if `x` cannot be converted to `f64`.
     #[inline]
-    pub fn var<T: Into<f64>>(x: T) -> F {
+    pub fn var<T: ToPrimitive>(x: T) -> F {
         F {
-            x: x.into(),
+            x: x.to_f64().unwrap(),
             dx: 1.0,
         }
     }
