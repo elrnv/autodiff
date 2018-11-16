@@ -855,16 +855,18 @@ impl Float for F {
     }
     #[inline]
     fn max(self, other: F) -> F {
+        let x = Float::max(self.x, other.x);
         F {
-            x: Float::max(self.x, other.x),
-            dx: 0.0,
+            x,
+            dx: if x == self.x { self.dx } else { other.dx },
         }
     }
     #[inline]
     fn min(self, other: F) -> F {
+        let x = Float::min(self.x, other.x);
         F {
-            x: Float::min(self.x, other.x),
-            dx: 0.0,
+            x,
+            dx: if x == self.x { self.dx } else { other.dx },
         }
     }
     #[inline]
@@ -1191,5 +1193,19 @@ mod tests {
         assert_full_eq!(x, F { x: 1.0, dx: 1.0 }); // mod assign
         x %= 2.0;
         assert_full_eq!(x, F { x: 1.0, dx: 1.0 }); // mod assign
+    }
+
+    // Test the min and max functions
+    #[test]
+    fn min_max_test() {
+        // Test basic arithmetic on F.
+        let x = F::var(1.0);
+        let y = F::cst(2.0);
+
+        let z = x.min(y);
+        assert_full_eq!(z, F { x: 1.0, dx: 1.0 });
+
+        let z = x.max(y);
+        assert_full_eq!(z, F { x: 2.0, dx: 0.0 });
     }
 }
