@@ -18,9 +18,7 @@
 // This crate is licensed under the terms described in the README.md, which is located at the root
 // directory of this crate.
 
-use num_traits::{
-    Float, FloatConst, Num, NumCast, One, ToPrimitive, Zero,
-};
+use num_traits::{Float, FloatConst, Num, NumCast, One, ToPrimitive, Zero};
 use std::f64;
 use std::num::FpCategory;
 use std::ops::{
@@ -855,18 +853,30 @@ impl Float for F {
     }
     #[inline]
     fn max(self, other: F) -> F {
-        let x = Float::max(self.x, other.x);
-        F {
-            x,
-            dx: if x == self.x { self.dx } else { other.dx },
+        if self.x > other.x {
+            F {
+                x: self.x,
+                dx: self.dx,
+            }
+        } else {
+            F {
+                x: other.x,
+                dx: other.dx,
+            }
         }
     }
     #[inline]
     fn min(self, other: F) -> F {
-        let x = Float::min(self.x, other.x);
-        F {
-            x,
-            dx: if x == self.x { self.dx } else { other.dx },
+        if self.x < other.x {
+            F {
+                x: self.x,
+                dx: self.dx,
+            }
+        } else {
+            F {
+                x: other.x,
+                dx: other.dx,
+            }
         }
     }
     #[inline]
