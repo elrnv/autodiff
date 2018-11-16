@@ -853,30 +853,18 @@ impl Float for F {
     }
     #[inline]
     fn max(self, other: F) -> F {
-        if self.x > other.x {
-            F {
-                x: self.x,
-                dx: self.dx,
-            }
+        if self.x < other.x {
+            other
         } else {
-            F {
-                x: other.x,
-                dx: other.dx,
-            }
+            self
         }
     }
     #[inline]
     fn min(self, other: F) -> F {
-        if self.x < other.x {
-            F {
-                x: self.x,
-                dx: self.dx,
-            }
+        if self.x > other.x {
+            other
         } else {
-            F {
-                x: other.x,
-                dx: other.dx,
-            }
+            self
         }
     }
     #[inline]
@@ -1209,13 +1197,30 @@ mod tests {
     #[test]
     fn min_max_test() {
         // Test basic arithmetic on F.
-        let x = F::var(1.0);
-        let y = F::cst(2.0);
+        let a = F::var(1.0);
+        let mut b = F::cst(2.0);
 
-        let z = x.min(y);
-        assert_full_eq!(z, F { x: 1.0, dx: 1.0 });
+        b = b.min(a);
+        assert_full_eq!(b, F { x: 1.0, dx: 1.0 });
 
-        let z = x.max(y);
-        assert_full_eq!(z, F { x: 2.0, dx: 0.0 });
+        b = F::cst(2.0);
+        b = a.min(b);
+        assert_full_eq!(b, F { x: 1.0, dx: 1.0 });
+
+        let b = F::cst(2.0);
+
+        let c = a.max(b);
+        assert_full_eq!(c, F { x: 2.0, dx: 0.0 });
+        
+        // Make sure that our min and max are consistent with the internal implementation to avoid
+        // inconsistencies in the future. In particular we look at tie breaking.
+        
+        let b = F::cst(1.0);
+        let minf = a.x.min(b.x);
+        assert_full_eq!(a.min(b), F { x: minf, dx: if minf == a.x { a.dx } else { b.dx } });
+
+        let maxf = a.x.max(b.x);
+        assert_full_eq!(a.max(b), F { x: maxf, dx: if maxf == a.x { a.dx } else { b.dx } });
+
     }
 }
