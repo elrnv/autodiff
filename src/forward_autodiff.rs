@@ -1037,6 +1037,28 @@ impl Float for F {
     }
 }
 
+impl std::iter::Sum for F {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = Self>,
+    {
+        let mut res = Self::zero();
+        for x in iter {
+            res += x;
+        }
+        res
+    }
+}
+
+impl std::iter::Sum<f64> for F {
+    fn sum<I>(iter: I) -> Self
+    where
+        I: Iterator<Item = f64>,
+    {
+        iter.map(|x| F::cst(x)).sum()
+    }
+}
+
 impl F {
     /// Create a new constant. Use this also to convert from a variable to a constant.
     /// This constructor panics if `x` cannot be converted to `f64`.
@@ -1211,16 +1233,36 @@ mod tests {
 
         let c = a.max(b);
         assert_full_eq!(c, F { x: 2.0, dx: 0.0 });
-        
+
         // Make sure that our min and max are consistent with the internal implementation to avoid
         // inconsistencies in the future. In particular we look at tie breaking.
-        
+
         let b = F::cst(1.0);
         let minf = a.x.min(b.x);
-        assert_full_eq!(a.min(b), F { x: minf, dx: if minf == a.x { a.dx } else { b.dx } });
+        assert_full_eq!(
+            a.min(b),
+            F {
+                x: minf,
+                dx: if minf == a.x { a.dx } else { b.dx }
+            }
+        );
 
         let maxf = a.x.max(b.x);
-        assert_full_eq!(a.max(b), F { x: maxf, dx: if maxf == a.x { a.dx } else { b.dx } });
+        assert_full_eq!(
+            a.max(b),
+            F {
+                x: maxf,
+                dx: if maxf == a.x { a.dx } else { b.dx }
+            }
+        );
+    }
 
+    // Test iterator sum
+    #[test]
+    fn sum_test() {
+        let v = vec![1.0, 2.0].into_iter();
+        let ad_v = vec![F::var(1.0), F::var(2.0)].into_iter();
+        assert_full_eq!(ad_v.clone().sum(), F { x: 3.0, dx: 2.0 });
+        assert_full_eq!(v.sum::<F>(), F { x: 3.0, dx: 0.0 });
     }
 }
