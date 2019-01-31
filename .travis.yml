@@ -5,11 +5,12 @@ rust:
   - beta
   - stable
 
+matrix:
+  allow_failures:
+    - rust: nightly
+  fast_finish: true
+
 cache: cargo
 
-script:
-  - cargo build
-  - cargo test
-
 notifications:
-email: false
+    email: false
