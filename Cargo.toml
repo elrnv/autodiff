@@ -1,8 +1,8 @@
 [package]
 name = "autodiff"
-version = "0.1.5"
+version = "0.1.6"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
-license = "Apache-2.0"
+license = "MIT OR Apache-2.0"
 description = "An automatic differentiation library"
 
 homepage = "https://github.com/elrnv/autodiff"
