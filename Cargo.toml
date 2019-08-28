@@ -4,6 +4,7 @@ version = "0.1.6"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "An automatic differentiation library"
+edition = "2018"
 
 homepage = "https://github.com/elrnv/autodiff"
 repository = "https://github.com/elrnv/autodiff"
@@ -18,4 +19,4 @@ travis-ci = { repository = "elrnv/autodiff", branch = "master" }
 num-traits = "0.2"
 
 [dev-dependencies]
-rand = "0.5"
+rand = "0.7"

@@ -1,9 +1,7 @@
-extern crate autodiff as ad;
-extern crate num_traits;
-extern crate rand;
-
-use ad::{diff, grad, F};
+use autodiff::{diff, grad, F};
 use num_traits::Float;
+use rand::distributions::{Uniform};
+use rand::prelude::*;
 
 #[test]
 fn num_test() {
@@ -32,8 +30,6 @@ fn simple_test() {
 
 #[test]
 fn random_test() {
-    use self::rand::{distributions::Uniform, Rng, SeedableRng, StdRng};
-
     let seed = [3; 32];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
     let range = Uniform::new(-1.0, 1.0);
@@ -48,8 +44,6 @@ fn random_test() {
 
 #[test]
 fn grad_test() {
-    use self::rand::{distributions::Uniform, Rng, SeedableRng, StdRng};
-
     let seed = [3; 32];
     let mut rng: StdRng = SeedableRng::from_seed(seed);
     let range = Uniform::new(-1.0, 1.0);

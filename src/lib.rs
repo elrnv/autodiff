@@ -6,7 +6,6 @@
 //! The following example differentiates a 1D function defined by a closure.
 //!
 //! ```rust
-//! # extern crate autodiff;
 //! # use autodiff::*;
 //! # fn main() {
 //!     // Define a function `f(x) = e^{-0.5*x^2}`
@@ -21,7 +20,6 @@
 //! To compute the gradient of a function, use the function `grad` as follows:
 //!
 //! ```rust
-//! # extern crate autodiff;
 //! # use autodiff::*;
 //! # fn main() {
 //!     // Define a function `f(x,y) = x*y^2`
@@ -37,7 +35,6 @@
 //! Compute a specific derivative of a multi-variable function:
 //!
 //! ```rust
-//! # extern crate autodiff;
 //! # use autodiff::*;
 //! # fn main() {
 //!     // Define a function `f(x,y) = x*y^2`.
@@ -52,11 +49,10 @@
 //! #   assert_eq!(f(&v).deriv(), 4.0);
 //! # }
 //! ```
-extern crate num_traits;
 
 pub mod forward_autodiff;
 
-pub use crate::forward_autodiff::*;
+pub use forward_autodiff::*;
 
 // Re-export useful traits for performing computations.
 pub use num_traits::{Float, FloatConst, NumCast, One, ToPrimitive, Zero};

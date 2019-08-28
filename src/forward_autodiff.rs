@@ -1104,7 +1104,6 @@ impl F {
 /// # Examples
 ///
 /// ```rust
-/// # extern crate autodiff;
 /// # use autodiff::*;
 /// # fn main() {
 ///     // Define a function `f(x) = e^{-0.5*x^2}`
@@ -1127,7 +1126,6 @@ where
 /// # Examples
 ///
 /// ```rust
-/// # extern crate autodiff;
 /// # use autodiff::*;
 /// # fn main() {
 ///     // Define a multivariate function `f(x,y) = x*y^2`
@@ -1159,7 +1157,7 @@ where
 mod tests {
     use super::*;
 
-    /// Convenience macro for comparing Nums in full.
+    /// Convenience macro for comparing `F`s in full.
     macro_rules! assert_full_eq {
         ($x:expr, $y:expr) => {
             assert!(F::full_eq(&$x, &$y));
