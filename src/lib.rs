@@ -50,13 +50,13 @@
 //! # }
 //! ```
 
-pub mod forward_autodiff;
 #[cfg(feature = "cgmath")]
 pub mod cgmath;
+pub mod forward_autodiff;
 
-pub use forward_autodiff::*;
 #[cfg(feature = "cgmath")]
 pub use crate::cgmath::*;
+pub use forward_autodiff::*;
 
 // Re-export useful traits for performing computations.
 pub use num_traits::{Float, FloatConst, NumCast, One, ToPrimitive, Zero};

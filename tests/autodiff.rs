@@ -1,6 +1,6 @@
 use autodiff::{diff, grad, F};
 use num_traits::Float;
-use rand::distributions::{Uniform};
+use rand::distributions::Uniform;
 use rand::prelude::*;
 
 #[test]
