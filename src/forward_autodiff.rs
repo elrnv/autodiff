@@ -18,7 +18,7 @@
 // This crate is licensed under the terms described in the README.md, which is located at the root
 // directory of this crate.
 
-use num_traits::{Float, FloatConst, Num, NumCast, One, ToPrimitive, Zero};
+use num_traits::{Float, FloatConst, Num, NumCast, One, ToPrimitive, FromPrimitive, Zero};
 use std::f64;
 use std::num::FpCategory;
 use std::ops::{
@@ -512,6 +512,64 @@ impl NumCast for F {
             Some(x) => Some(F { x: x, dx: 0.0 }),
             None => None,
         }
+    }
+}
+impl FromPrimitive for F {
+    #[inline]
+    fn from_isize(n: isize) -> Option<Self> {
+        FromPrimitive::from_isize(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_i8(n: i8) -> Option<Self> {
+        FromPrimitive::from_i8(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_i16(n: i16) -> Option<Self> {
+        FromPrimitive::from_i16(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_i32(n: i32) -> Option<Self> {
+        FromPrimitive::from_i32(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_i64(n: i64) -> Option<Self> {
+        FromPrimitive::from_i64(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_i128(n: i128) -> Option<Self> {
+        FromPrimitive::from_i128(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_usize(n: usize) -> Option<Self> {
+        FromPrimitive::from_usize(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_u8(n: u8) -> Option<Self> {
+        FromPrimitive::from_u8(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_u16(n: u16) -> Option<Self> {
+        FromPrimitive::from_u16(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_u32(n: u32) -> Option<Self> {
+        FromPrimitive::from_u32(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_u64(n: u64) -> Option<Self> {
+        FromPrimitive::from_u64(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_u128(n: u128) -> Option<Self> {
+        FromPrimitive::from_u128(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_f32(n: f32) -> Option<Self> {
+        FromPrimitive::from_f32(n).map(|x: f64| F::cst(x))
+    }
+    #[inline]
+    fn from_f64(n: f64) -> Option<Self> {
+        FromPrimitive::from_f64(n).map(|x: f64| F::cst(x))
     }
 }
 
