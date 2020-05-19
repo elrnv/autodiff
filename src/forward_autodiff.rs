@@ -25,7 +25,7 @@ use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
 };
 
-#[derive(Copy, Clone, Debug)]
+#[derive(Copy, Clone, Debug, PartialEq)]
 pub struct F {
     pub x: f64,
     pub dx: f64,
@@ -44,6 +44,22 @@ impl Into<f32> for F {
     #[inline]
     fn into(self) -> f32 {
         self.x as f32
+    }
+}
+
+/// Panic-less conversion from `f64` type.
+impl From<f64> for F {
+    #[inline]
+    fn from(x: f64) -> F {
+        F::cst(x)
+    }
+}
+
+/// Panic-less conversion from `f32` type.
+impl From<f32> for F {
+    #[inline]
+    fn from(x: f32) -> F {
+        F::cst(x)
     }
 }
 
@@ -437,13 +453,6 @@ impl Default for F {
             x: f64::default(),
             dx: 0.0,
         }
-    }
-}
-
-impl PartialEq<F> for F {
-    #[inline]
-    fn eq(&self, rhs: &F) -> bool {
-        self.x == rhs.x
     }
 }
 
@@ -859,9 +868,24 @@ impl Float for F {
     }
     #[inline]
     fn powf(self, n: F) -> F {
+        // Avoid imaginary values in the ln.
+        let dn = if n.dx == 0.0 {
+            0.0
+        } else {
+            Float::ln(self.x) * n.dx
+        };
+
+        let x = Float::powf(self.x, n.x);
+
+        // Avoid division by zero.
+        let x_df = if self.x == 0.0 && x == 0.0 {
+            0.0
+        } else {
+            x * n.x * self.dx / self.x
+        };
         F {
-            x: Float::powf(self.x, n.x),
-            dx: (Float::ln(self.x) * n.dx + n.x * self.dx / self.x) * Float::powf(self.x, n.x),
+            x,
+            dx: x * dn + x_df,
         }
     }
     #[inline]
@@ -883,7 +907,7 @@ impl Float for F {
     fn exp2(self) -> F {
         F {
             x: Float::exp2(self.x),
-            dx: self.dx * Float::ln(2.0) * Float::exp(self.x),
+            dx: self.dx * Float::ln(2.0) * Float::exp2(self.x),
         }
     }
     #[inline]
@@ -1155,6 +1179,14 @@ impl F {
     pub fn deriv(&self) -> f64 {
         self.dx
     }
+
+    /// Raise this number to the `n`'th power.
+    ///
+    /// This is a generic version of `Float::powf`.
+    #[inline]
+    pub fn pow(self, n: impl Into<f64>) -> F {
+        self.powf(F::cst(n.into()))
+    }
 }
 
 /// Evaluates the derivative of `f` at `x0`
@@ -1320,5 +1352,30 @@ mod tests {
         let ad_v = vec![F::var(1.0), F::var(2.0)].into_iter();
         assert_full_eq!(ad_v.clone().sum(), F { x: 3.0, dx: 2.0 });
         assert_full_eq!(v.sum::<F>(), F { x: 3.0, dx: 0.0 });
+    }
+
+    // Test the different ways to compute a derivative of a quadratic.
+    #[test]
+    fn quadratic() {
+        let f1 = |x: F| (x - 1.0f64).pow(2.0);
+        let f2 = |x: F| (x - 1.0f64) * (x - 1.0f64);
+
+        // Derivative at 0
+        let dfdx1: F = f1(F::var(0.0));
+        let dfdx2: F = f2(F::var(0.0));
+
+        assert_eq!(dfdx1, dfdx2);
+
+        let f1 = |x: F| x.pow(2.0);
+        let f2 = |x: F| x * x;
+
+        // Derivative at 0
+        let dfdx1: F = f1(F::var(0.0));
+        let dfdx2: F = f2(F::var(0.0));
+
+        dbg!(dfdx1);
+        dbg!(dfdx2);
+
+        assert_eq!(dfdx1, dfdx2);
     }
 }
