@@ -603,10 +603,7 @@ impl<D: Zero> NumCast for F<D> {
     fn from<T: ToPrimitive>(n: T) -> Option<F<D>> {
         let x = n.to_f64();
         match x {
-            Some(x) => Some(F {
-                x,
-                dx: D::zero(),
-            }),
+            Some(x) => Some(F { x, dx: D::zero() }),
             None => None,
         }
     }

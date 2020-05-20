@@ -1,7 +1,8 @@
 use super::F;
 use cgmath::{AbsDiffEq, RelativeEq, UlpsEq};
+use num_traits::Zero;
 
-impl AbsDiffEq for F {
+impl<D: PartialEq + Zero> AbsDiffEq for F<D> {
     type Epsilon = Self;
     fn default_epsilon() -> Self::Epsilon {
         F::cst(f64::default_epsilon())
@@ -10,7 +11,7 @@ impl AbsDiffEq for F {
         self.x.abs_diff_eq(&other.x, epsilon.x)
     }
 }
-impl RelativeEq for F {
+impl<D: PartialEq + Zero> RelativeEq for F<D> {
     fn default_max_relative() -> Self::Epsilon {
         F::cst(f64::default_max_relative())
     }
@@ -24,7 +25,7 @@ impl RelativeEq for F {
         self.x.relative_eq(&other.x, epsilon.x, max_relative.x)
     }
 }
-impl UlpsEq for F {
+impl<D: PartialEq + Zero> UlpsEq for F<D> {
     fn default_max_ulps() -> u32 {
         f64::default_max_ulps()
     }
@@ -35,7 +36,7 @@ impl UlpsEq for F {
 
 #[cfg(test)]
 mod tests {
-    use crate::F;
+    use crate::{F, F1};
     use cgmath::{Matrix3, Vector3};
     #[test]
     fn mtx_mul() {
@@ -45,7 +46,7 @@ mod tests {
             [F::cst(7.0), F::cst(8.0), F::cst(9.0)],
         ];
         let mtx = Matrix3::from(data);
-        let v = Vector3::from([F::var(1.0); 3]);
+        let v = Vector3::from([F1::var(1.0); 3]);
         assert_eq!(
             mtx * v,
             Vector3::from([
