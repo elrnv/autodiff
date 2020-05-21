@@ -9,7 +9,7 @@ An auto-differentiation library.
 Currently supported features:
 
   - [x] Forward auto-differentiation
-    - [x] Higher order differentiation
+    - [x] Single variable higher order differentiation
 
   - [ ] Reverse auto-differentiation
 
@@ -69,9 +69,9 @@ Compute higher order derivatives by nesting the generic parameter of `F`. For co
 type aliases for the first 3 orders:
 
 ```rust
-type F1 = F<f64>
-type F2 = F<F<f64>>
-type F3 = F<F<F<f64>>>
+type F1 = F<f64>;
+type F2 = F<F<f64>>;
+type F3 = F<F<F<f64>>>;
 ```
 
 To compute the third order derivative, we can use the `F3` type as follows.
