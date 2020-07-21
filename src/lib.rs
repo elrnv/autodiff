@@ -67,6 +67,8 @@
 
 #[cfg(feature = "cgmath")]
 pub mod cgmath;
+#[cfg(feature = "bytemuck")]
+pub mod bytemuck;
 pub mod forward_autodiff;
 
 #[cfg(feature = "cgmath")]
