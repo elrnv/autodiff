@@ -49,6 +49,7 @@ pub type F3 = F<F2>;
 ///
 /// The derivative is generic to support higher order differentiation.
 #[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[repr(C)]
 pub struct F<D> {
     /// The value of the variable
     pub x: f64,

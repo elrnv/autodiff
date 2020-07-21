@@ -65,10 +65,10 @@
 //! # assert_eq!(f(F3::var(0.0)).deriv().deriv().deriv(), 6.0);
 //! ```
 
-#[cfg(feature = "cgmath")]
-pub mod cgmath;
 #[cfg(feature = "bytemuck")]
 pub mod bytemuck;
+#[cfg(feature = "cgmath")]
+pub mod cgmath;
 pub mod forward_autodiff;
 
 #[cfg(feature = "cgmath")]
