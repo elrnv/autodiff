@@ -911,9 +911,10 @@ where
     }
     #[inline]
     fn recip(self) -> F<D> {
+        let x = self.reduce_order();
         F {
             x: self.x.recip(),
-            dx: -self.dx / (self.reduce_order() * self.reduce_order()),
+            dx: -self.dx / (x * x),
         }
     }
     #[inline]
@@ -967,7 +968,7 @@ where
     fn exp2(self) -> F<D> {
         F {
             x: Float::exp2(self.x),
-            dx: self.dx * (Float::exp2(self.reduce_order()) * Float::ln(2.0)),
+            dx: self.dx * Float::ln(2.0) * Float::exp2(self.reduce_order()),
         }
     }
     #[inline]
@@ -981,10 +982,11 @@ where
     fn log(self, b: F<D>) -> F<D> {
         let s_r = self.reduce_order();
         let b_r = b.reduce_order();
+        let ln_b_r = Float::ln(b_r);
         F {
             x: Float::log(self.x, b.x),
-            dx: b.dx * (-Float::ln(s_r)) / (b_r * Float::powi(Float::ln(b_r), 2))
-                + self.dx / (s_r * Float::ln(b_r)),
+            dx: -b.dx * Float::ln(s_r) / (b_r * ln_b_r * ln_b_r)
+                + self.dx / (s_r * ln_b_r),
         }
     }
     #[inline]
@@ -1026,7 +1028,7 @@ where
     fn cbrt(self) -> F<D> {
         F {
             x: Float::cbrt(self.x),
-            dx: self.dx * (self.reduce_order().powf(R::from(-2.0 / 3.0).unwrap()) * (1.0 / 3.0)),
+            dx: self.dx * self.reduce_order().powf(R::from(-2.0 / 3.0).unwrap()) * 1.0 / 3.0,
         }
     }
     #[inline]
