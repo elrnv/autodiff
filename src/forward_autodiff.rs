@@ -48,7 +48,7 @@ pub type F3 = F<F2>;
 /// A generic forward differentiation `Dual` number.
 ///
 /// The derivative is generic to support higher order differentiation.
-#[derive(Copy, Clone, Debug, PartialEq, PartialOrd)]
+#[derive(Copy, Clone, Debug)]
 #[repr(C)]
 pub struct F<D> {
     /// The value of the variable
@@ -56,6 +56,58 @@ pub struct F<D> {
     /// The derivative of the variable
     pub dx: D,
 }
+
+/*
+ * IMPORTANT: The reason why PartialEq and PartialOrd need to be implemented in terms of x only
+ * (i.e. not compare dx also) is because F is meant to have the same behaviour as a regular float.
+ * That is if a and b are floats, then we want `a op b` to be true if and only if `x op y` where
+ * x.value() = a and y.value() = b and `op` is one of <, >, <=, >=, or =.
+ *
+ * Changing this behaviour will change the behaviour of algorithms that expect floats as their
+ * parameters, which is unacceptable since it preclues F from being used as a drop-in substitution
+ * for floats.
+ */
+
+impl<D, U> PartialEq<F<U>> for F<D> {
+    #[inline]
+    fn eq(&self, rhs: &F<U>) -> bool {
+        self.x == rhs.x
+    }
+}
+
+impl<D, U> PartialOrd<F<U>> for F<D> {
+    #[inline]
+    fn partial_cmp(&self, other: &F<U>) -> Option<::std::cmp::Ordering> {
+        PartialOrd::partial_cmp(&self.x, &other.x)
+    }
+}
+
+/// Compare the values and derivatives of two dual numbers for equality.
+trait DualEq {
+    fn dual_eq(&self, rhs: &Self) -> bool;
+}
+
+impl DualEq for f32 {
+    /// Compare two single precisioun floats for equality.
+    fn dual_eq(&self, rhs: &f32) -> bool {
+        self == rhs
+    }
+}
+
+impl DualEq for f64 {
+    /// Compare two double precisioun floats for equality.
+    fn dual_eq(&self, rhs: &f64) -> bool {
+        self == rhs
+    }
+}
+
+impl<D: DualEq> DualEq for F<D> {
+    /// Compare two `F`s in full, including the derivative part.
+    fn dual_eq(&self, rhs: &F<D>) -> bool {
+        self.x == rhs.x && self.dx.dual_eq(&rhs.dx)
+    }
+}
+
 
 // Base case
 impl ReduceOrder for F1 {
@@ -1310,53 +1362,60 @@ where
 mod tests {
     use super::*;
 
+    /// Convenience macro for comparing `F`s in full.
+    macro_rules! assert_dual_eq {
+        ($x:expr, $y:expr) => {
+            assert!(F::dual_eq(&$x, &$y));
+        };
+    }
+
     #[test]
     fn basic_arithmetic_test() {
         // Test basic arithmetic on F.
         let mut x = F1::var(1.0);
         let y = F1::var(2.0);
 
-        assert_eq!(-x, F { x: -1.0, dx: -1.0 }); // negation
+        assert_dual_eq!(-x, F { x: -1.0, dx: -1.0 }); // negation
 
-        assert_eq!(x + y, F { x: 3.0, dx: 2.0 }); // addition
-        assert_eq!(x + 2.0, F { x: 3.0, dx: 1.0 }); // addition
-        assert_eq!(2.0 + x, F { x: 3.0, dx: 1.0 }); // addition
+        assert_dual_eq!(x + y, F { x: 3.0, dx: 2.0 }); // addition
+        assert_dual_eq!(x + 2.0, F { x: 3.0, dx: 1.0 }); // addition
+        assert_dual_eq!(2.0 + x, F { x: 3.0, dx: 1.0 }); // addition
         x += y;
-        assert_eq!(x, F { x: 3.0, dx: 2.0 }); // assign add
+        assert_dual_eq!(x, F { x: 3.0, dx: 2.0 }); // assign add
         x += 1.0;
-        assert_eq!(x, F { x: 4.0, dx: 2.0 }); // assign add
+        assert_dual_eq!(x, F { x: 4.0, dx: 2.0 }); // assign add
 
-        assert_eq!(x - y, F { x: 2.0, dx: 1.0 }); // subtraction
-        assert_eq!(x - 1.0, F { x: 3.0, dx: 2.0 }); // subtraction
-        assert_eq!(1.0 - x, F { x: -3.0, dx: -2.0 }); // subtraction
+        assert_dual_eq!(x - y, F { x: 2.0, dx: 1.0 }); // subtraction
+        assert_dual_eq!(x - 1.0, F { x: 3.0, dx: 2.0 }); // subtraction
+        assert_dual_eq!(1.0 - x, F { x: -3.0, dx: -2.0 }); // subtraction
         x -= y;
-        assert_eq!(x, F { x: 2.0, dx: 1.0 }); // subtract assign
+        assert_dual_eq!(x, F { x: 2.0, dx: 1.0 }); // subtract assign
         x -= 1.0;
-        assert_eq!(x, F { x: 1.0, dx: 1.0 }); // subtract assign
+        assert_dual_eq!(x, F { x: 1.0, dx: 1.0 }); // subtract assign
 
-        assert_eq!(x * y, F { x: 2.0, dx: 3.0 }); // multiplication
-        assert_eq!(x * 2.0, F { x: 2.0, dx: 2.0 }); // multiplication
-        assert_eq!(2.0 * x, F { x: 2.0, dx: 2.0 }); // multiplication
+        assert_dual_eq!(x * y, F { x: 2.0, dx: 3.0 }); // multiplication
+        assert_dual_eq!(x * 2.0, F { x: 2.0, dx: 2.0 }); // multiplication
+        assert_dual_eq!(2.0 * x, F { x: 2.0, dx: 2.0 }); // multiplication
         x *= y;
-        assert_eq!(x, F { x: 2.0, dx: 3.0 }); // multiply assign
+        assert_dual_eq!(x, F { x: 2.0, dx: 3.0 }); // multiply assign
         x *= 2.0;
-        assert_eq!(x, F { x: 4.0, dx: 6.0 }); // multiply assign
+        assert_dual_eq!(x, F { x: 4.0, dx: 6.0 }); // multiply assign
 
-        assert_eq!(x / y, F { x: 2.0, dx: 2.0 }); // division
-        assert_eq!(x / 2.0, F { x: 2.0, dx: 3.0 }); // division
-        assert_eq!(2.0 / x, F { x: 0.5, dx: -0.75 }); // division
+        assert_dual_eq!(x / y, F { x: 2.0, dx: 2.0 }); // division
+        assert_dual_eq!(x / 2.0, F { x: 2.0, dx: 3.0 }); // division
+        assert_dual_eq!(2.0 / x, F { x: 0.5, dx: -0.75 }); // division
         x /= y;
-        assert_eq!(x, F { x: 2.0, dx: 2.0 }); // divide assign
+        assert_dual_eq!(x, F { x: 2.0, dx: 2.0 }); // divide assign
         x /= 2.0;
-        assert_eq!(x, F { x: 1.0, dx: 1.0 }); // divide assign
+        assert_dual_eq!(x, F { x: 1.0, dx: 1.0 }); // divide assign
 
-        assert_eq!(x % y, F { x: 1.0, dx: 1.0 }); // mod
-        assert_eq!(x % 2.0, F { x: 1.0, dx: 1.0 }); // mod
-        assert_eq!(2.0 % x, F { x: 0.0, dx: -2.0 }); // mod
+        assert_dual_eq!(x % y, F { x: 1.0, dx: 1.0 }); // mod
+        assert_dual_eq!(x % 2.0, F { x: 1.0, dx: 1.0 }); // mod
+        assert_dual_eq!(2.0 % x, F { x: 0.0, dx: -2.0 }); // mod
         x %= y;
-        assert_eq!(x, F { x: 1.0, dx: 1.0 }); // mod assign
+        assert_dual_eq!(x, F { x: 1.0, dx: 1.0 }); // mod assign
         x %= 2.0;
-        assert_eq!(x, F { x: 1.0, dx: 1.0 }); // mod assign
+        assert_dual_eq!(x, F { x: 1.0, dx: 1.0 }); // mod assign
     }
 
     // Test the min and max functions
@@ -1367,23 +1426,23 @@ mod tests {
         let mut b = F::cst(2.0);
 
         b = b.min(a);
-        assert_eq!(b, F { x: 1.0, dx: 1.0 });
+        assert_dual_eq!(b, F { x: 1.0, dx: 1.0 });
 
         b = F::cst(2.0);
         b = a.min(b);
-        assert_eq!(b, F { x: 1.0, dx: 1.0 });
+        assert_dual_eq!(b, F { x: 1.0, dx: 1.0 });
 
         let b = F::cst(2.0);
 
         let c = a.max(b);
-        assert_eq!(c, F { x: 2.0, dx: 0.0 });
+        assert_dual_eq!(c, F { x: 2.0, dx: 0.0 });
 
         // Make sure that our min and max are consistent with the internal implementation to avoid
         // inconsistencies in the future. In particular we look at tie breaking.
 
         let b = F::cst(1.0);
         let minf = a.x.min(b.x);
-        assert_eq!(
+        assert_dual_eq!(
             a.min(b),
             F {
                 x: minf,
@@ -1392,7 +1451,7 @@ mod tests {
         );
 
         let maxf = a.x.max(b.x);
-        assert_eq!(
+        assert_dual_eq!(
             a.max(b),
             F {
                 x: maxf,
@@ -1406,8 +1465,8 @@ mod tests {
     fn sum_test() {
         let v = vec![1.0, 2.0].into_iter();
         let ad_v = vec![F1::var(1.0), F1::var(2.0)].into_iter();
-        assert_eq!(ad_v.clone().sum::<F1>(), F { x: 3.0, dx: 2.0 });
-        assert_eq!(v.sum::<F1>(), F { x: 3.0, dx: 0.0 });
+        assert_dual_eq!(ad_v.clone().sum::<F1>(), F { x: 3.0, dx: 2.0 });
+        assert_dual_eq!(v.sum::<F1>(), F { x: 3.0, dx: 0.0 });
     }
 
     // Test the different ways to compute a derivative of a quadratic.
@@ -1420,7 +1479,7 @@ mod tests {
         let dfdx1: F1 = f1(F1::var(0.0));
         let dfdx2: F1 = f2(F1::var(0.0));
 
-        assert_eq!(dfdx1, dfdx2);
+        assert_dual_eq!(dfdx1, dfdx2);
 
         let f1 = |x: F1| x.pow(2.0);
         let f2 = |x: F1| x * x;
@@ -1429,6 +1488,6 @@ mod tests {
         let dfdx1: F1 = f1(F1::var(0.0));
         let dfdx2: F1 = f2(F1::var(0.0));
 
-        assert_eq!(dfdx1, dfdx2);
+        assert_dual_eq!(dfdx1, dfdx2);
     }
 }
