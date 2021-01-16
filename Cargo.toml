@@ -17,9 +17,9 @@ travis-ci = { repository = "elrnv/autodiff", branch = "master" }
 
 [dependencies]
 num-traits = "0.2"
-cgmath = { version = "0.17", optional = true }
+cgmath = { version = "0.18", optional = true }
 bytemuck = { version = "1.2", optional = true }
 
 [dev-dependencies]
-rand = "0.7"
-approx = "0.3"
+rand = "0.8"
+approx = "0.4"
