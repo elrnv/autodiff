@@ -18,6 +18,31 @@
 // This crate is licensed under the terms described in the README.md, which is located at the root
 // directory of this crate.
 
+//! This module defines forward automatic differentiation.
+//! This mode of `autodiff` is most efficient when computing deriviatives with more inputs than outputs.
+//! It is also useful for computing Jacobian products.
+//!
+//! # Examples
+//! The following exmaple shows how to compute a Jacobian product and evaluate the function at the same time.
+//! ```
+//! use autodiff::*;
+//! // Define a function `f(x,y) = (x*y^2, x/y)`.
+//! let f = |v: &[F1]| vec![v[0] * v[1] * v[1], v[0]/v[1]];
+//!
+//! // Compute the Jacobian of `f` at `x = (1,2)` multiplied by a vector `p = (3,4)`.
+//! let xp = vec![
+//!     F1::new(1.0, 3.0),
+//!     F1::new(2.0, 4.0),
+//! ];
+//! let jp = f(&xp);
+//! println!("({}, {})", jp[0].value(), jp[1].value()); // prints `(4.0, 0.5)`
+//! println!("({}, {})", jp[0].deriv(), jp[1].deriv()); // prints `(28.0, 0.5)`
+//! # assert_eq!(jp[0].value(), 4.0);
+//! # assert_eq!(jp[1].value(), 0.5);
+//! # assert_eq!(jp[0].deriv(), 28.0);
+//! # assert_eq!(jp[1].deriv(), 0.5);
+//! ```
+
 use num_traits::{Float, FloatConst, FromPrimitive, Num, NumCast, One, ToPrimitive, Zero};
 use std::f64;
 use std::num::FpCategory;
@@ -107,7 +132,6 @@ impl<D: DualEq> DualEq for F<D> {
         self.x == rhs.x && self.dx.dual_eq(&rhs.dx)
     }
 }
-
 
 // Base case
 impl ReduceOrder for F1 {
@@ -1037,8 +1061,7 @@ where
         let ln_b_r = Float::ln(b_r);
         F {
             x: Float::log(self.x, b.x),
-            dx: -b.dx * Float::ln(s_r) / (b_r * ln_b_r * ln_b_r)
-                + self.dx / (s_r * ln_b_r),
+            dx: -b.dx * Float::ln(s_r) / (b_r * ln_b_r * ln_b_r) + self.dx / (s_r * ln_b_r),
         }
     }
     #[inline]
@@ -1250,6 +1273,20 @@ impl<D: AddAssign + Zero> std::iter::Sum<f64> for F<D> {
     }
 }
 
+impl<D> F<D> {
+    /// Create a new dual number with value `x` and initial derivative `d`.
+    ///
+    /// # Panics
+    /// This constructor panics if `x` cannot be converted to `f64`.
+    #[inline]
+    pub fn new<T: ToPrimitive>(x: T, d: D) -> F<D> {
+        F {
+            x: x.to_f64().unwrap(),
+            dx: d,
+        }
+    }
+}
+
 impl<D: Zero> F<D> {
     /// Create a new constant.
     ///
@@ -1329,6 +1366,9 @@ where
 }
 
 /// Evaluates the gradient of `f` at `x0`
+///
+/// Note that it is much more efficient to use Backward or Reverse-mode automatic
+/// differentiation for computing gradients of scalar valued functions.
 ///
 /// # Examples
 ///
