@@ -1029,7 +1029,14 @@ where
     fn sqrt(self) -> F<D> {
         F {
             x: self.x.sqrt(),
-            dx: self.dx / (self.reduce_order().sqrt() * 2.0),
+            dx: {
+                let denom = self.reduce_order().sqrt() * 2.0;
+                if denom == R::zero() && self.dx == D::zero() {
+                    D::zero()
+                } else {
+                    self.dx / denom
+                }
+            },
         }
     }
 
@@ -1404,8 +1411,11 @@ mod tests {
 
     /// Convenience macro for comparing `F`s in full.
     macro_rules! assert_dual_eq {
-        ($x:expr, $y:expr) => {
+        ($x:expr, $y:expr $(,)?) => {
             assert!(F::dual_eq(&$x, &$y));
+        };
+        ($x:expr, $y:expr, $($args:tt)+) => {
+            assert!(F::dual_eq(&$x, &$y), $($args)+);
         };
     }
 
@@ -1529,5 +1539,16 @@ mod tests {
         let dfdx2: F1 = f2(F1::var(0.0));
 
         assert_dual_eq!(dfdx1, dfdx2);
+    }
+
+    #[test]
+    fn sqrt() {
+        let x = F1::var(0.2).sqrt();
+        assert_dual_eq!(x, F1::new(0.2.sqrt(), 0.5/0.2.sqrt()), "{:?}", x);
+
+        // Test that taking a square root of zero does not produce NaN.
+        // By convention we take 0/0 = 0 here.
+        let x = F1::cst(0.0).sqrt();
+        assert_dual_eq!(x, F1::new(0.0, 0.0), "{:?}", x);
     }
 }
