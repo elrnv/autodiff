@@ -8,7 +8,7 @@
 //! ```rust
 //! use autodiff::*;
 //! // Define a function `f(x) = e^{-0.5*x^2}`
-//! let f = |x: F1| (-x * x / F::cst(2.0)).exp();
+//! let f = |x: FT<f64>| (-x * x / F::cst(2.0)).exp();
 //!
 //! // Differentiate `f` at zero.
 //! println!("{}", diff(f, 0.0)); // prints `0`
@@ -20,7 +20,7 @@
 //! ```rust
 //! use autodiff::*;
 //! // Define a function `f(x,y) = x*y^2`
-//! let f = |x: &[F1]| x[0] * x[1] * x[1];
+//! let f = |x: &[FT<f64>]| x[0] * x[1] * x[1];
 //!
 //! // Differentiate `f` at `(1,2)`.
 //! let g = grad(f, &vec![1.0, 2.0]);
@@ -33,7 +33,7 @@
 //! ```rust
 //! use autodiff::*;
 //! // Define a function `f(x,y) = x*y^2`.
-//! let f = |v: &[F1]| v[0] * v[1] * v[1];
+//! let f = |v: &[FT<f64>]| v[0] * v[1] * v[1];
 //!
 //! // Differentiate `f` at `(1,2)` with respect to `x` (the first unknown) only.
 //! let v = vec![
@@ -44,25 +44,25 @@
 //! # assert_eq!(f(&v).deriv(), 4.0);
 //! ```
 //!
-//! Compute higher order derivatives by nesting the generic parameter of `F`. For convenience we
-//! provide type aliases for the first 3 orders:
+//! The following example shows how to compute a Jacobian product and evaluate the function at the same time.
 //!
-//! ```ignore
-//! type F1 = F<f64>
-//! type F2 = F<F<f64>>
-//! type F3 = F<F<F<f64>>>
 //! ```
-//!
-//! To compute the third order derivative, we can use the `F3` type as follows.
-//!
-//! ```rust
 //! use autodiff::*;
-//! // Define a function `f(x) = (x - 1)^3`.
-//! let f = |x: F3| (x - 1.0_f64).powi(3);
+//! // Define a function `f(x,y) = (x*y^2, x/y)`.
+//! let f = |v: &[FT<f64>]| vec![v[0] * v[1] * v[1], v[0]/v[1]];
 //!
-//! // Compute the 3rd derivative of `f` at `x = 0`.
-//! println!("{}", f(F3::var(0.0)).deriv().deriv().deriv()); // prints `6`
-//! # assert_eq!(f(F3::var(0.0)).deriv().deriv().deriv(), 6.0);
+//! // Compute the Jacobian of `f` at `x = (1,2)` multiplied by a vector `p = (3,4)`.
+//! let xp = vec![
+//!     F1::new(1.0, 3.0),
+//!     F1::new(2.0, 4.0),
+//! ];
+//! let jp = f(&xp);
+//! println!("({}, {})", jp[0].value(), jp[1].value()); // prints `(4.0, 0.5)`
+//! println!("({}, {})", jp[0].deriv(), jp[1].deriv()); // prints `(28.0, 0.5)`
+//! # assert_eq!(jp[0].value(), 4.0);
+//! # assert_eq!(jp[1].value(), 0.5);
+//! # assert_eq!(jp[0].deriv(), 28.0);
+//! # assert_eq!(jp[1].deriv(), 0.5);
 //! ```
 
 #[cfg(feature = "bytemuck")]

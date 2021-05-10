@@ -2,18 +2,18 @@ use super::F;
 use cgmath::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Zero;
 
-impl<D: PartialEq + Zero> AbsDiffEq for F<D> {
+impl<V: PartialEq + AbsDiffEq<Epsilon = V>, D: PartialEq + Zero> AbsDiffEq for F<V, D> {
     type Epsilon = Self;
     fn default_epsilon() -> Self::Epsilon {
-        F::cst(f64::default_epsilon())
+        F::cst(V::default_epsilon())
     }
     fn abs_diff_eq(&self, other: &Self, epsilon: Self::Epsilon) -> bool {
         self.x.abs_diff_eq(&other.x, epsilon.x)
     }
 }
-impl<D: PartialEq + Zero> RelativeEq for F<D> {
+impl<V: PartialEq + RelativeEq<Epsilon = V>, D: PartialEq + Zero> RelativeEq for F<V, D> {
     fn default_max_relative() -> Self::Epsilon {
-        F::cst(f64::default_max_relative())
+        F::cst(V::default_max_relative())
     }
 
     fn relative_eq(
@@ -25,9 +25,9 @@ impl<D: PartialEq + Zero> RelativeEq for F<D> {
         self.x.relative_eq(&other.x, epsilon.x, max_relative.x)
     }
 }
-impl<D: PartialEq + Zero> UlpsEq for F<D> {
+impl<V: PartialEq + UlpsEq<Epsilon = V>, D: PartialEq + Zero> UlpsEq for F<V, D> {
     fn default_max_ulps() -> u32 {
-        f64::default_max_ulps()
+        V::default_max_ulps()
     }
     fn ulps_eq(&self, other: &Self, epsilon: Self::Epsilon, max_ulps: u32) -> bool {
         self.x.ulps_eq(&other.x, epsilon.x, max_ulps)

@@ -1,22 +1,19 @@
-use super::{F1, F2, F3};
+use super::F;
 use bytemuck::{Pod, Zeroable};
 
 // Implement unsafe bytemuck traits for common known types.
-// SAFETY: F is repr(C) and F1, F2, F3 are byte aligned f64s and hence will have no padding bytes.
+// SAFETY: F is repr(C) and F<T,T> is identical to a pair [T;2] which is Pod.
 
-unsafe impl Pod for F1 {}
-unsafe impl Zeroable for F1 {}
-unsafe impl Pod for F2 {}
-unsafe impl Zeroable for F2 {}
-unsafe impl Pod for F3 {}
-unsafe impl Zeroable for F3 {}
+unsafe impl<T: Pod> Pod for F<T, T> {}
+unsafe impl<T: Zeroable> Zeroable for F<T, T> {}
 
 #[cfg(test)]
 mod tests {
     use crate::F1;
+
     #[test]
     fn cast() {
-        let autodiff_data = &[F1::var(1.0), F1::cst(2.0), F1::cst(3.0)][..];
+        let autodiff_data: &[FT<f64>] = &[F1::var(1.0), F1::cst(2.0), F1::cst(3.0)][..];
 
         let pairs: &[[f64; 2]] = bytemuck::cast_slice(autodiff_data);
 
