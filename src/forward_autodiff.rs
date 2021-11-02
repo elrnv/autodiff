@@ -269,7 +269,7 @@ impl<V, D> Mul<F<V, D>> for F<V, D>
 where
     V: Copy + Mul,
     //D: Copy + Mul<R>,
-    D: Copy + Mul<V>,
+    D: Mul<V>,
     D::Output: Add,
     //F<V,D>: ReduceOrder<Output = R>
 {
