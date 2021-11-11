@@ -9,7 +9,6 @@ An auto-differentiation library.
 Currently supported features:
 
   - [x] Forward auto-differentiation
-    - [x] Single variable higher order differentiation
 
   - [ ] Reverse auto-differentiation
 
@@ -64,6 +63,10 @@ Compute a specific derivative of a multi-variable function:
      ];
      println!("{}", f(&v).deriv()); // prints `4`
 ```
+
+# Features
+
+Support for `approx`, `cgmath` and `nalgebra` via the `approx`, `cgmath` and `na` feature flags respectively.
 
 # License
 

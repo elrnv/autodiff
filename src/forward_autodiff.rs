@@ -22,7 +22,9 @@
 //! This mode of `autodiff` is most efficient when computing derivatives with more inputs than outputs.
 //! It is also useful for computing Jacobian products (see [crate root docs](crate::lib) for examples).
 
-use num_traits::{Float, FloatConst, FromPrimitive, Num, NumCast, One, Signed, ToPrimitive, Zero};
+use num_traits::{
+    Bounded, Float, FloatConst, FromPrimitive, Num, NumCast, One, Signed, ToPrimitive, Zero,
+};
 use std::num::FpCategory;
 use std::ops::{
     Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Rem, RemAssign, Sub, SubAssign,
@@ -267,9 +269,9 @@ impl<V: SubAssign, D> SubAssign<V> for F<V, D> {
 
 impl<V, D> Mul<F<V, D>> for F<V, D>
 where
-    V: Copy + Mul,
+    V: Clone + Mul,
     //D: Copy + Mul<R>,
-    D: Copy + Mul<V>,
+    D: Clone + Mul<V>,
     D::Output: Add,
     //F<V,D>: ReduceOrder<Output = R>
 {
@@ -277,7 +279,7 @@ where
     #[inline]
     fn mul(self, rhs: F<V, D>) -> Self::Output {
         F {
-            x: self.x * rhs.x,
+            x: self.x.clone() * rhs.x.clone(),
             dx: self.dx * rhs.x + rhs.dx * self.x,
             //dx: self.dx * rhs.reduce_order() + rhs.dx * self.reduce_order(),
         }
@@ -298,13 +300,13 @@ impl Mul<FT<f64>> for f64 {
     }
 }
 
-impl<V: Mul<Output = V> + Copy, D: Mul<V, Output = D>> Mul<V> for F<V, D> {
+impl<V: Mul<Output = V> + Clone, D: Mul<V, Output = D>> Mul<V> for F<V, D> {
     type Output = F<V, D>;
     #[inline]
     fn mul(self, rhs: V) -> F<V, D> {
         // rhs is treated as a constant
         F {
-            x: self.x * rhs,
+            x: self.x * rhs.clone(),
             dx: self.dx * rhs,
         }
     }
@@ -324,7 +326,7 @@ impl Mul<FT<f64>> for f32 {
 
 impl<V, D> MulAssign for F<V, D>
 where
-    V: Copy + MulAssign,
+    V: Clone + MulAssign,
     //D: MulAssign<R> + Mul<R, Output = D> + AddAssign,
     D: MulAssign<V> + Mul<V, Output = D> + AddAssign,
     //F<V, D>: ReduceOrder<Reduced = R>,
@@ -334,17 +336,17 @@ where
         // Product rule
         //self.dx *= rhs.reduce_order();
         //self.dx += rhs.dx * self.reduce_order();
-        self.dx *= rhs.x;
-        self.dx += rhs.dx * self.x;
+        self.dx *= rhs.x.clone();
+        self.dx += rhs.dx * self.x.clone();
         self.x *= rhs.x;
     }
 }
 
-impl<V: MulAssign + Copy, D: MulAssign<V>> MulAssign<V> for F<V, D> {
+impl<V: MulAssign + Clone, D: MulAssign<V>> MulAssign<V> for F<V, D> {
     #[inline]
     fn mul_assign(&mut self, rhs: V) {
         // rhs is treated as a constant
-        self.x *= rhs;
+        self.x *= rhs.clone();
         self.dx *= rhs;
     }
 }
@@ -358,9 +360,9 @@ impl<V: MulAssign + Copy, D: MulAssign<V>> MulAssign<V> for F<V, D> {
 
 impl<V, D> Div<F<V, D>> for F<V, D>
 where
-    V: Copy + Div<Output = V> + Mul<Output = V>,
+    V: Clone + Div<Output = V> + Mul<Output = V>,
     //D: Copy + Div<R, Output = D> + Mul<R, Output = D> + Sub<Output = D>,
-    D: Copy + Div<V, Output = D> + Mul<V, Output = D> + Sub<Output = D>,
+    D: Clone + Div<V, Output = D> + Mul<V, Output = D> + Sub<Output = D>,
     //F<V, D>: ReduceOrder<Reduced = R>,
     //R: Copy + Mul<Output = R>,
 {
@@ -369,19 +371,19 @@ where
     fn div(self, rhs: F<V, D>) -> F<V, D> {
         //let rhs_r = rhs.reduce_order();
         F {
-            x: self.x / rhs.x,
-            dx: (self.dx * rhs.x - rhs.dx * self.x) / (rhs.x * rhs.x),
+            x: self.x.clone() / rhs.x.clone(),
+            dx: (self.dx * rhs.x.clone() - rhs.dx * self.x) / (rhs.x.clone() * rhs.x),
             //dx: (self.dx * rhs_r - rhs.dx * self.reduce_order()) / (rhs_r * rhs_r),
         }
     }
 }
 
-impl<V: Div + Copy, D: Div<V>> Div<V> for F<V, D> {
+impl<V: Div + Clone, D: Div<V>> Div<V> for F<V, D> {
     type Output = F<V::Output, D::Output>;
     #[inline]
     fn div(self, rhs: V) -> Self::Output {
         F {
-            x: self.x / rhs,
+            x: self.x / rhs.clone(),
             dx: self.dx / rhs,
         }
     }
@@ -408,7 +410,7 @@ impl Div<FT<f64>> for f32 {
 
 impl<V, D> DivAssign for F<V, D>
 where
-    V: Copy + DivAssign + Mul<Output = V> + Div<Output = V>,
+    V: Clone + DivAssign + Mul<Output = V> + Div<Output = V>,
     //D: Mul<R, Output = D> + DivAssign<R> + SubAssign,
     D: Mul<V, Output = D> + DivAssign<V> + SubAssign,
     //F<V, D>: ReduceOrder<Reduced = R>,
@@ -418,17 +420,17 @@ where
     fn div_assign(&mut self, rhs: F<V, D>) {
         //let rhs_r = rhs.reduce_order();
         //self.dx /= rhs_r;
-        self.dx /= rhs.x;
+        self.dx /= rhs.x.clone();
         //self.dx -= rhs.dx * (self.reduce_order() / (rhs_r * rhs_r));
-        self.dx -= rhs.dx * (self.x / (rhs.x * rhs.x));
+        self.dx -= rhs.dx * (self.x.clone() / (rhs.x.clone() * rhs.x.clone()));
         self.x /= rhs.x;
     }
 }
 
-impl<V: DivAssign + Copy, D: DivAssign<V>> DivAssign<V> for F<V, D> {
+impl<V: DivAssign + Clone, D: DivAssign<V>> DivAssign<V> for F<V, D> {
     #[inline]
     fn div_assign(&mut self, rhs: V) {
-        self.x /= rhs;
+        self.x /= rhs.clone();
         self.dx /= rhs;
     }
 }
@@ -442,9 +444,9 @@ impl<V: DivAssign + Copy, D: DivAssign<V>> DivAssign<V> for F<V, D> {
 
 impl<V, D> Rem<F<V, D>> for F<V, D>
 where
-    V: Copy + Rem + Div<Output = V> + Float,
+    V: Clone + Rem<Output = V> + Div<Output = V> + Sub<Output = V> + One,
     //D: Copy + Mul<R, Output = D> + Sub<Output = D>,
-    D: Copy + Mul<V, Output = D> + Sub<Output = D>,
+    D: Clone + Mul<V, Output = D> + Sub<Output = D>,
     //F<V, D>: ReduceOrder<Reduced = R>,
     //R: Float,
 {
@@ -452,9 +454,10 @@ where
     #[inline]
     fn rem(self, rhs: F<V, D>) -> Self::Output {
         // This is an approximation. There are places where the derivative doesn't exist.
+        let div = self.x.clone() / rhs.x.clone();
         F {
             x: self.x % rhs.x, // x % y = x - [x/|y|]*|y|
-            dx: self.dx - rhs.dx * (self.x / rhs.x).trunc(),
+            dx: self.dx - rhs.dx * (div.clone() - div % V::one()),
             //dx: self.dx - rhs.dx * (self.reduce_order() / rhs.reduce_order()).trunc(),
         }
     }
@@ -486,9 +489,9 @@ impl Rem<FT<f64>> for f64 {
 
 impl<V, D> RemAssign for F<V, D>
 where
-    V: RemAssign + Div<Output = V> + Float,
+    V: Clone + RemAssign + Div<Output = V> + Sub<Output = V> + Rem<Output = V> + One,
     //D: Copy + Mul<R, Output = D> + SubAssign,
-    D: Copy + Mul<V, Output = D> + SubAssign,
+    D: Mul<V, Output = D> + SubAssign,
     //F<V, D>: ReduceOrder<Reduced = R>,
     //R: Float,
 {
@@ -496,7 +499,8 @@ where
     fn rem_assign(&mut self, rhs: F<V, D>) {
         // x % y = x - [x/|y|]*|y|
         //self.dx -= rhs.dx * (self.reduce_order() / rhs.reduce_order()).trunc();
-        self.dx -= rhs.dx * (self.x / rhs.x).trunc();
+        let div = self.x.clone() / rhs.x.clone();
+        self.dx -= rhs.dx * (div.clone() - div % V::one());
         self.x %= rhs.x;
     }
 }
@@ -662,9 +666,9 @@ impl<V: Zero, D: Zero> Zero for F<V, D> {
 
 impl<V, D> One for F<V, D>
 where
-    V: Copy + One,
+    V: Clone + One,
     //D: Copy + Zero + std::fmt::Debug + Mul<<F<V, D> as ReduceOrder>::Reduced, Output = D>,
-    D: Copy + Zero + std::fmt::Debug + Mul<V, Output = D>,
+    D: Clone + Zero + std::fmt::Debug + Mul<V, Output = D>,
     //F<V, D>: ReduceOrder,
 {
     #[inline]
@@ -678,8 +682,8 @@ where
 
 impl<V, D> Num for F<V, D>
 where
-    V: Copy + Num + Float,
-    D: Copy
+    V: Clone + Num,
+    D: Clone
         + std::fmt::Debug
         + Zero
         + PartialEq
@@ -702,9 +706,9 @@ where
 
 impl<V, D> Signed for F<V, D>
 where
-    V: Signed + Copy + Num + Float,
+    V: Signed + Clone + Num + PartialOrd,
     D: Signed
-        + Copy
+        + Clone
         + std::fmt::Debug
         + Zero
         + PartialEq
@@ -717,9 +721,9 @@ where
     #[inline]
     fn abs(&self) -> Self {
         if self.is_negative() {
-            -*self
+            -self.clone()
         } else {
-            *self
+            self.clone()
         }
     }
 
@@ -728,27 +732,46 @@ where
         if *self <= *other {
             Self::zero()
         } else {
-            *self - *other
+            self.clone() - other.clone()
         }
     }
 
     #[inline]
     fn signum(&self) -> Self {
-        match *self {
-            n if n > Self::zero() => Self::one(),
-            n if n == Self::zero() => Self::zero(),
+        match self {
+            n if n > &Self::zero() => Self::one(),
+            n if n == &Self::zero() => Self::zero(),
             _ => -Self::one(),
         }
     }
 
     #[inline]
     fn is_positive(&self) -> bool {
-        *self > Self::zero()
+        self > &Self::zero()
     }
 
     #[inline]
     fn is_negative(&self) -> bool {
-        *self < Self::zero()
+        self < &Self::zero()
+    }
+}
+
+impl<V, D> Bounded for F<V, D>
+where
+    V: Bounded,
+    D: Bounded,
+{
+    fn min_value() -> Self {
+        F {
+            x: V::min_value(),
+            dx: D::min_value(),
+        }
+    }
+    fn max_value() -> Self {
+        F {
+            x: V::max_value(),
+            dx: D::max_value(),
+        }
     }
 }
 
@@ -948,7 +971,10 @@ where
     }
     #[inline]
     fn mul_add(self, a: F<V, D>, b: F<V, D>) -> F<V, D> {
-        self * a + b
+        F {
+            x: self.x.mul_add(a.x, b.x),
+            dx: self.dx * a.x + a.dx * self.x + b.dx,
+        }
     }
     #[inline]
     fn recip(self) -> F<V, D> {
@@ -1014,18 +1040,20 @@ where
 
     #[inline]
     fn exp(self) -> F<V, D> {
+        let exp = Float::exp(self.x);
         F {
-            x: Float::exp(self.x),
+            x: exp,
             //dx: self.dx * Float::exp(self.reduce_order()),
-            dx: self.dx * Float::exp(self.x),
+            dx: self.dx * exp,
         }
     }
     #[inline]
     fn exp2(self) -> F<V, D> {
+        let exp2 = Float::exp2(self.x);
         F {
-            x: Float::exp2(self.x),
+            x: exp2,
             //dx: self.dx * Float::ln(2.0) * Float::exp2(self.reduce_order()),
-            dx: self.dx * V::from(2.0).unwrap().ln() * Float::exp2(self.x),
+            dx: self.dx * V::from(2.0).unwrap().ln() * exp2,
         }
     }
     #[inline]
@@ -1101,7 +1129,7 @@ where
     }
     #[inline]
     fn hypot(self, other: F<V, D>) -> F<V, D> {
-        Float::sqrt(Float::powi(self, 2) + Float::powi(other, 2))
+        Float::sqrt(self.clone() * self + other.clone() * other)
     }
     #[inline]
     fn sin(self) -> F<V, D> {
@@ -1133,9 +1161,9 @@ where
     #[inline]
     fn asin(self) -> F<V, D> {
         F {
-            x: Float::asin(self.x),
+            x: Float::asin(self.x.clone()),
             //k;wdx: self.dx / Float::sqrt(R::one() - Float::powi(self.reduce_order(), 2)),
-            dx: self.dx / Float::sqrt(V::one() - Float::powi(self.x, 2)),
+            dx: self.dx / Float::sqrt(V::one() - self.x.clone() * self.x),
         }
     }
     #[inline]
@@ -1143,7 +1171,7 @@ where
         F {
             x: Float::acos(self.x),
             //dx: -self.dx / Float::sqrt(R::one() - Float::powi(self.reduce_order(), 2)),
-            dx: -self.dx / Float::sqrt(V::one() - Float::powi(self.x, 2)),
+            dx: -self.dx / Float::sqrt(V::one() - self.x * self.x),
         }
     }
     #[inline]
@@ -1151,20 +1179,12 @@ where
         F {
             x: Float::atan(self.x),
             // dx: self.dx / (Float::powi(self.reduce_order(), 2) + R::one()),
-            dx: self.dx / (Float::powi(self.x, 2) + V::one()),
+            dx: self.dx / (self.x * self.x + V::one()),
         }
     }
     #[inline]
     fn atan2(self, other: F<V, D>) -> F<V, D> {
-        //let self_r = self.reduce_order();
-        //let other_r = other.reduce_order();
-        let self_r = self.x;
-        let other_r = other.x;
-        F {
-            x: Float::atan2(self.x, other.x),
-            dx: (self.dx * other_r - other.dx * self_r)
-                / (Float::powi(self_r, 2) + Float::powi(other_r, 2)),
-        }
+        self.atan2_impl(other)
     }
     #[inline]
     fn sin_cos(self) -> (F<V, D>, F<V, D>) {
@@ -1216,10 +1236,11 @@ where
     }
     #[inline]
     fn tanh(self) -> F<V, D> {
+        let tanhx = Float::tanh(self.x);
         F {
             x: Float::tanh(self.x),
             //dx: self.dx * (R::one() - Float::powi(Float::tanh(self.reduce_order()), 2)),
-            dx: self.dx * (V::one() - Float::powi(Float::tanh(self.x), 2)),
+            dx: self.dx * (V::one() - tanhx * tanhx),
         }
     }
     #[inline]
@@ -1227,7 +1248,7 @@ where
         F {
             x: Float::asinh(self.x),
             // dx: self.dx / (Float::powi(self.reduce_order(), 2) + R::one()).sqrt(),
-            dx: self.dx / (Float::powi(self.x, 2) + V::one()).sqrt(),
+            dx: self.dx / (self.x * self.x + V::one()).sqrt(),
         }
     }
     #[inline]
@@ -1235,7 +1256,7 @@ where
         F {
             x: Float::acosh(self.x),
             //dx: self.dx / (Float::powi(self.reduce_order(), 2) - R::one()).sqrt(),
-            dx: self.dx / (Float::powi(self.x, 2) - V::one()).sqrt(),
+            dx: self.dx / (self.x * self.x - V::one()).sqrt(),
         }
     }
     #[inline]
@@ -1243,7 +1264,7 @@ where
         F {
             x: Float::atanh(self.x),
             //dx: self.dx / (-Float::powi(self.reduce_order(), 2) + R::one()),
-            dx: self.dx / (-Float::powi(self.x, 2) + V::one()),
+            dx: self.dx / (-self.x * self.x + V::one()),
         }
     }
     #[inline]
@@ -1287,6 +1308,24 @@ impl<V: AddAssign + Zero, D: AddAssign + Zero> std::iter::Sum<V> for F<V, D> {
     }
 }
 
+impl<V, D> F<V, D>
+where
+    V: Float,
+    D: Mul<V, Output = D> + Sub<Output = D> + Div<V, Output = D>,
+{
+    #[inline]
+    pub(crate) fn atan2_impl(self, other: F<V, D>) -> F<V, D> {
+        //let self_r = self.reduce_order();
+        //let other_r = other.reduce_order();
+        let self_r = self.x;
+        let other_r = other.x;
+        F {
+            x: Float::atan2(self.x, other.x),
+            dx: (self.dx * other_r - other.dx * self_r) / (self_r * self_r + other_r * other_r),
+        }
+    }
+}
+
 impl<V, D> F<V, D> {
     /// Create a new dual number with value `x` and initial derivative `d`.
     ///
@@ -1320,21 +1359,21 @@ impl<V, D: One> F<V, D> {
     }
 }
 
-impl<V: Copy, D> F<V, D> {
+impl<V: Clone, D> F<V, D> {
     /// Get the value of this variable.
     #[inline]
     pub fn value(&self) -> V {
-        self.x
+        self.x.clone()
     }
 }
 
-impl<V, D: Copy> F<V, D> {
+impl<V, D: Clone> F<V, D> {
     /// Get the current derivative of this variable.
     ///
     /// This will be zero if this `F` is a constant.
     #[inline]
     pub fn deriv(&self) -> D {
-        self.dx
+        self.dx.clone()
     }
 }
 

@@ -65,14 +65,18 @@
 //! # assert_eq!(jp[1].deriv(), 0.5);
 //! ```
 
+#[cfg(feature = "approx")]
+pub mod approx;
 #[cfg(feature = "bytemuck")]
 pub mod bytemuck;
 #[cfg(feature = "cgmath")]
 pub mod cgmath;
 pub mod forward_autodiff;
+#[cfg(feature = "nalgebra")]
+pub mod nalgebra;
+#[cfg(feature = "simba")]
+pub mod simba;
 
-#[cfg(feature = "cgmath")]
-pub use crate::cgmath::*;
 pub use forward_autodiff::*;
 
 // Re-export useful traits for performing computations.

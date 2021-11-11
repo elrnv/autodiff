@@ -1,5 +1,5 @@
 use super::F;
-use cgmath::{AbsDiffEq, RelativeEq, UlpsEq};
+use approx::{AbsDiffEq, RelativeEq, UlpsEq};
 use num_traits::Zero;
 
 impl<V: PartialEq + AbsDiffEq<Epsilon = V>, D: PartialEq + Zero> AbsDiffEq for F<V, D> {
@@ -36,29 +36,13 @@ impl<V: PartialEq + UlpsEq<Epsilon = V>, D: PartialEq + Zero> UlpsEq for F<V, D>
 
 #[cfg(test)]
 mod tests {
-    use crate::{F, F1};
-    use cgmath::{BaseFloat, Matrix3, Vector3};
-    // Generic multiply. This tests that F works with cgmath scalar types
-    fn mul<T: BaseFloat>(m: Matrix3<T>, v: Vector3<T>) -> Vector3<T> {
-        m * v
-    }
+    use crate::F1;
+    use approx::AbsDiffEq;
 
     #[test]
-    fn mtx_mul() {
-        let data = [
-            [F1::cst(1.0), F1::cst(2.0), F1::cst(3.0)],
-            [F1::cst(4.0), F1::cst(5.0), F1::cst(6.0)],
-            [F1::cst(7.0), F1::cst(8.0), F1::cst(9.0)],
-        ];
-        let mtx = Matrix3::from(data);
-        let v = Vector3::from([F1::var(1.0); 3]);
-        assert_eq!(
-            mul(mtx, v),
-            Vector3::from([
-                F { x: 12.0, dx: 12.0 },
-                F { x: 15.0, dx: 15.0 },
-                F { x: 18.0, dx: 18.0 }
-            ])
-        );
+    fn abs_diff_eq() {
+        let a = F1::cst(1.0);
+        let b = F1::cst(1.0);
+        assert!(a.abs_diff_eq(&b, F1::cst(1e-4)));
     }
 }
