@@ -66,16 +66,16 @@
 //! ```
 
 #[cfg(feature = "approx")]
-pub mod approx;
+mod approx;
 #[cfg(feature = "bytemuck")]
-pub mod bytemuck;
+mod bytemuck;
 #[cfg(feature = "cgmath")]
-pub mod cgmath;
+mod cgmath;
 pub mod forward_autodiff;
 #[cfg(feature = "nalgebra")]
-pub mod nalgebra;
+mod nalgebra;
 #[cfg(feature = "simba")]
-pub mod simba;
+mod simba;
 
 pub use forward_autodiff::*;
 
