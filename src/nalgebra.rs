@@ -103,7 +103,7 @@ where
     fn min_value() -> Option<Self> {
         let v_min = <V as RealField>::min_value();
         let d_min = <D as RealField>::min_value();
-        if v_min.is_some() && d_min.is_some(){
+        if v_min.is_some() && d_min.is_some() {
             Some(Self {
                 x: v_min.unwrap(),
                 dx: d_min.unwrap(),
@@ -116,7 +116,7 @@ where
     fn max_value() -> Option<Self> {
         let v_max = <V as RealField>::max_value();
         let d_max = <D as RealField>::max_value();
-        if v_max.is_some() && d_max.is_some(){
+        if v_max.is_some() && d_max.is_some() {
             Some(Self {
                 x: v_max.unwrap(),
                 dx: d_max.unwrap(),
