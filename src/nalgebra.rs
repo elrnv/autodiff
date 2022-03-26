@@ -99,11 +99,37 @@ where
     fn ln_10() -> Self {
         Self::LN_10()
     }
+
+    fn min_value() -> Option<Self> {
+        let v_min = <V as RealField>::min_value();
+        let d_min = <D as RealField>::min_value();
+        if v_min.is_some() && d_min.is_some() {
+            Some(Self {
+                x: v_min.unwrap(),
+                dx: d_min.unwrap(),
+            })
+        } else {
+            None
+        }
+    }
+
+    fn max_value() -> Option<Self> {
+        let v_max = <V as RealField>::max_value();
+        let d_max = <D as RealField>::max_value();
+        if v_max.is_some() && d_max.is_some() {
+            Some(Self {
+                x: v_max.unwrap(),
+                dx: d_max.unwrap(),
+            })
+        } else {
+            None
+        }
+    }
 }
 
 impl<V, D> ComplexField for F<V, D>
 where
-    V: ComplexField + Mul<V::RealField, Output = V> + Div<V::RealField, Output = V> + PartialOrd,
+    V: ComplexField + Mul<V::RealField, Output = V> + Div<V::RealField, Output = V>,
     D: ComplexField
         + std::fmt::Debug
         + Zero
@@ -118,8 +144,7 @@ where
         + Div<V, Output = D>
         + Div<Output = D>
         + Sub<Output = D>
-        + Clone
-        + PartialOrd,
+        + Clone,
     V::RealField: RealField + Float + FloatConst,
     D::RealField: RealField
         + std::fmt::Debug
@@ -514,8 +539,7 @@ where
         + MulAssign<V>
         + Div<V, Output = D>
         + Div<Output = D>
-        + Sub<Output = D>
-        + PartialOrd,
+        + Sub<Output = D>,
 {
 }
 
