@@ -13,7 +13,7 @@ mod tests {
 
     #[test]
     fn cast() {
-        let autodiff_data: &[FT<f64>] = &[F1::var(1.0), F1::cst(2.0), F1::cst(3.0)][..];
+        let autodiff_data: &[F1] = &[F1::var(1.0), F1::cst(2.0), F1::cst(3.0)][..];
 
         let pairs: &[[f64; 2]] = bytemuck::cast_slice(autodiff_data);
 
