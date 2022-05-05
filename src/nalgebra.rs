@@ -30,7 +30,7 @@ where
     }
     fn copysign(self, to: Self) -> Self {
         F {
-            x: self.x.copysign(to.x),
+            x: RealField::copysign(self.x, to.x),
             dx: to.dx,
         }
     }
