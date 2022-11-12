@@ -1278,11 +1278,17 @@ where
     }
     #[inline]
     fn to_degrees(self) -> F<V, D> {
-        F::cst(Float::to_degrees(self.x))
+        F {
+            x: Float::to_degrees(self.x),
+            dx: Float::to_degrees(self.dx),
+        }
     }
     #[inline]
     fn to_radians(self) -> F<V, D> {
-        F::cst(Float::to_radians(self.x))
+        F {
+            x: Float::to_radians(self.x),
+            dx: Float::to_radians(self.dx),
+        }
     }
 }
 
@@ -1614,5 +1620,17 @@ mod tests {
         // By convention we take 0/0 = 0 here.
         let x = F1::cst(0.0).cbrt();
         assert_dual_eq!(x, F1::new(0.0, 0.0), "{:?}", x);
+    }
+
+    #[test]
+    fn to_degrees() {
+        let x = F1::var(0.2).to_degrees();
+        assert_dual_eq!(x, F1::new(0.2.to_degrees(), 1.0.to_degrees()), "{:?}", x);
+    }
+
+    #[test]
+    fn to_radians() {
+        let x = F1::var(0.2).to_radians();
+        assert_dual_eq!(x, F1::new(0.2.to_radians(), 1.0.to_radians()), "{:?}", x);
     }
 }
