@@ -1,6 +1,6 @@
 [package]
 name = "autodiff"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Egor Larionov <egor.larionov@gmail.com>"]
 license = "MIT OR Apache-2.0"
 description = "An automatic differentiation library"
@@ -18,9 +18,9 @@ travis-ci = { repository = "elrnv/autodiff", branch = "master" }
 [dependencies]
 num-traits = "0.2"
 approx = { version = "0.5", optional = true }
-nalgebra = { version = "0.31", optional = true }
+nalgebra = { version = "0.32", optional = true }
 bytemuck = { version = "1", optional = true }
-simba = { version = "0.7", optional = true }
+simba = { version = "0.8", optional = true }
 cgmath = { version = "0.18", optional = true }
 
 [dev-dependencies]
