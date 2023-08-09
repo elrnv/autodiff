@@ -463,14 +463,14 @@ where
     }
 }
 
-impl<V: Rem<f64>, D: Rem<f64>> Rem<f64> for F<V, D> {
+impl<V: Rem<f64>, D: Rem<f64, Output = D>> Rem<f64> for F<V, D> {
     type Output = F<V::Output, D::Output>;
     #[inline]
     fn rem(self, rhs: f64) -> Self::Output {
         // This is an approximation. There are places where the derivative doesn't exist.
         F {
             x: self.x % rhs, // x % y = x - [x/|y|]*|y|
-            dx: self.dx % rhs,
+            dx: self.dx,
         }
     }
 }
@@ -509,7 +509,6 @@ impl<V: RemAssign<f64>, D: RemAssign<f64>> RemAssign<f64> for F<V, D> {
     #[inline]
     fn rem_assign(&mut self, rhs: f64) {
         self.x %= rhs;
-        self.dx %= rhs;
     }
 }
 
@@ -517,7 +516,6 @@ impl<V: RemAssign<f32>, D: RemAssign<f32>> RemAssign<f32> for F<V, D> {
     #[inline]
     fn rem_assign(&mut self, rhs: f32) {
         self.x %= rhs;
-        self.dx %= rhs;
     }
 }
 
@@ -915,28 +913,28 @@ where
     fn floor(self) -> F<V, D> {
         F {
             x: self.x.floor(),
-            dx: self.dx,
+            dx: D::zero(),
         }
     }
     #[inline]
     fn ceil(self) -> F<V, D> {
         F {
             x: self.x.ceil(),
-            dx: self.dx,
+            dx: D::zero(),
         }
     }
     #[inline]
     fn round(self) -> F<V, D> {
         F {
             x: self.x.round(),
-            dx: self.dx,
+            dx: D::zero(),
         }
     }
     #[inline]
     fn trunc(self) -> F<V, D> {
         F {
             x: self.x.trunc(),
-            dx: self.dx,
+            dx: D::zero(),
         }
     }
     #[inline]
