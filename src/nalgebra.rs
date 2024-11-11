@@ -543,22 +543,6 @@ where
 {
 }
 
-//impl<V, D, B> Field for F<V, D>
-//where
-//    B: SimdBool,
-//    V: Clone + Field<SimdBool = B> + RemAssign + Div<Output = V> + Float,
-//    D: Clone
-//        + Field<SimdBool = B>
-//        + Mul<V, Output = D>
-//        + SubAssign
-//        + std::ops::DivAssign<V>
-//        + std::ops::MulAssign<V>
-//        + std::fmt::Debug
-//        + Div<V>
-//        + Div<V, Output = D>,
-//{
-//}
-
 impl<V, D, B> SimdValue for F<V, D>
 where
     B: SimdBool,
@@ -568,10 +552,7 @@ where
     type Element = F<V::Element, D::Element>;
     type SimdBool = B;
 
-    #[inline(always)]
-    fn lanes() -> usize {
-        V::lanes()
-    }
+    const LANES: usize = V::LANES;
 
     #[inline(always)]
     fn splat(val: Self::Element) -> Self {
