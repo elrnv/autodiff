@@ -1,4 +1,5 @@
 use super::F;
+use num_traits::Zero;
 use simba::scalar::{SubsetOf, SupersetOf};
 
 impl<V: SubsetOf<V>, D: SubsetOf<D>> SubsetOf<F<V, D>> for F<V, D> {
@@ -31,14 +32,71 @@ impl<V: SubsetOf<V>, D: SubsetOf<D> + num_traits::Zero> SubsetOf<V> for F<V, D> 
     }
 }
 
-impl<V: SupersetOf<f64>, D: num_traits::Zero> SupersetOf<f64> for F<V, D> {
+impl<V, D> SupersetOf<f32> for F<V, D>
+where
+    V: SupersetOf<f32>,
+    D: Zero,
+{
     fn is_in_subset(&self) -> bool {
-        self.x.is_in_subset()
+        self.dx.is_zero() && self.x.is_in_subset()
     }
+
+    fn to_subset_unchecked(&self) -> f32 {
+        self.x.to_subset_unchecked()
+    }
+
+    fn from_subset(element: &f32) -> Self {
+        Self::cst(V::from_subset(element))
+    }
+}
+
+impl<V, D> SupersetOf<f64> for F<V, D>
+where
+    V: SupersetOf<f64>,
+    D: Zero,
+{
+    fn is_in_subset(&self) -> bool {
+        self.dx.is_zero() && self.x.is_in_subset()
+    }
+
     fn to_subset_unchecked(&self) -> f64 {
         self.x.to_subset_unchecked()
     }
+
     fn from_subset(element: &f64) -> Self {
-        F::cst(V::from_subset(element))
+        Self::cst(V::from_subset(element))
     }
+}
+
+#[cfg(test)]
+mod test {
+    use simba::scalar::SupersetOf;
+
+    use crate::F;
+
+    macro_rules! create_superset_of_test {
+        ($scalar: ty,  $name: ident) => {
+            #[test]
+            fn $name() {
+                let variable = F::<$scalar, $scalar>::var(2.3);
+                let constant = F::<$scalar, $scalar>::cst(4.1);
+
+                assert!(!SupersetOf::<$scalar>::is_in_subset(&variable));
+                assert_eq!(None, SupersetOf::<$scalar>::to_subset(&variable));
+
+                assert!(SupersetOf::<$scalar>::is_in_subset(&constant));
+                assert_eq!(
+                    Some(constant.x),
+                    SupersetOf::<$scalar>::to_subset(&constant)
+                );
+
+                let from_subset: F<$scalar, $scalar> = SupersetOf::<$scalar>::from_subset(&3.1);
+                assert_eq!(3.1, from_subset.x);
+                assert_eq!(0.0, from_subset.dx);
+            }
+        };
+    }
+
+    create_superset_of_test!(f32, superset_of_f32);
+    create_superset_of_test!(f64, superset_of_f64);
 }

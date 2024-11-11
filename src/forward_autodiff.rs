@@ -89,35 +89,6 @@ impl<V: PartialOrd, D, U> PartialOrd<F<V, U>> for F<V, D> {
     }
 }
 
-/// Compare the values and derivatives of two dual numbers for equality.
-trait DualEq {
-    fn dual_eq(&self, rhs: &Self) -> bool;
-}
-
-impl DualEq for f32 {
-    /// Compare two single precision floats for equality.
-    #[inline]
-    fn dual_eq(&self, rhs: &f32) -> bool {
-        self == rhs
-    }
-}
-
-impl DualEq for f64 {
-    /// Compare two double precision floats for equality.
-    #[inline]
-    fn dual_eq(&self, rhs: &f64) -> bool {
-        self == rhs
-    }
-}
-
-impl<V: PartialEq, D: DualEq> DualEq for F<V, D> {
-    /// Compare two `F`s in full, including the derivative part.
-    #[inline]
-    fn dual_eq(&self, rhs: &F<V, D>) -> bool {
-        self.x == rhs.x && self.dx.dual_eq(&rhs.dx)
-    }
-}
-
 impl<V: ToPrimitive, D> Into<f64> for F<V, D> {
     /// Converts the dual number into an `f64`.
     ///
@@ -1458,6 +1429,35 @@ where
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// Compare the values and derivatives of two dual numbers for equality.
+    trait DualEq {
+        fn dual_eq(&self, rhs: &Self) -> bool;
+    }
+
+    impl DualEq for f32 {
+        /// Compare two single precision floats for equality.
+        #[inline]
+        fn dual_eq(&self, rhs: &f32) -> bool {
+            self == rhs
+        }
+    }
+
+    impl DualEq for f64 {
+        /// Compare two double precision floats for equality.
+        #[inline]
+        fn dual_eq(&self, rhs: &f64) -> bool {
+            self == rhs
+        }
+    }
+
+    impl<V: PartialEq, D: DualEq> DualEq for F<V, D> {
+        /// Compare two `F`s in full, including the derivative part.
+        #[inline]
+        fn dual_eq(&self, rhs: &F<V, D>) -> bool {
+            self.x == rhs.x && self.dx.dual_eq(&rhs.dx)
+        }
+    }
 
     /// Convenience macro for comparing `F`s in full.
     macro_rules! assert_dual_eq {
