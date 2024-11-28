@@ -1,6 +1,6 @@
 // Multivariate quadratic function differentiation.
 
-use autodiff::*;
+use autofloat::*;
 
 fn main() {
     let x: f64 = 0.0;

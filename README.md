@@ -1,16 +1,12 @@
-# `autodiff`
+# autofloat
 
-An auto-differentiation library.
+![license](https://img.shields.io/badge/License-MIT-blue)
+[![workflow](https://github.com/Rookfighter/autofloat/actions/workflows/rust.yml/badge.svg)](https://github.com/Rookfighter/autofloat/actions/workflows/rust.yml)
+[![codecov](https://codecov.io/gh/Rookfighter/autofloat/graph/badge.svg?token=DC8GWI6PLW)](https://codecov.io/gh/Rookfighter/autofloat)
 
-[![On crates.io](https://img.shields.io/crates/v/autodiff.svg)](https://crates.io/crates/autodiff)
-[![On docs.rs](https://docs.rs/autodiff/badge.svg)](https://docs.rs/autodiff/)
-[![Build status](https://travis-ci.org/elrnv/autodiff.svg?branch=master)](https://travis-ci.org/elrnv/autodiff)
+`autofloat` is a pure Rust library, which implements efficient automatic differentiation in forward mode.
 
-Currently supported features:
-
-  - [x] Forward auto-differentiation
-
-  - [ ] Reverse auto-differentiation
+The library currently provides scalar datatypes to compute gradients and it optionally integrates with `nalgebra`.
 
 To compute a derivative with respect to a variable using this library:
 
@@ -19,11 +15,6 @@ To compute a derivative with respect to a variable using this library:
   2. compute your function using this variable as the input.
 
   3. request the derivative from this variable using the `deriv` method.
-
-
-# Disclaimer
-
-This library is a work in progress and is not ready for production use.
 
 
 # Examples
@@ -55,7 +46,7 @@ Compute a specific derivative of a multi-variable function:
 ```rust
      // Define a function `f(x,y) = x*y^2`.
      let f = |v: &[FT<f64>]| v[0] * v[1] * v[1];
- 
+
      // Differentiate `f` at `(1,2)` with respect to `x` (the first unknown) only.
      let v = vec![
          F1::var(1.0), // Create a variable.
@@ -64,9 +55,6 @@ Compute a specific derivative of a multi-variable function:
      println!("{}", f(&v).deriv()); // prints `4`
 ```
 
-# Features
-
-Support for `approx`, `cgmath` and `nalgebra` via the `approx`, `cgmath` and `na` feature flags respectively.
 
 # License
 
@@ -80,4 +68,4 @@ at your option.
 
 # Acknowledgements
 
-This library started as a fork of [rust-ad](https://github.com/ibab/rust-ad).
+This library started as a fork of [autodiff](https://github.com/elrnv/autodiff) , which again was forked from [rust-ad](https://github.com/ibab/rust-ad).

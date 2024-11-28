@@ -1,4 +1,4 @@
-use autodiff::{diff, grad, F, F1};
+use autofloat::{diff, grad, F, F1};
 use num_traits::Float;
 use rand::distributions::Uniform;
 use rand::prelude::*;

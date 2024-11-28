@@ -1,4 +1,29 @@
-// Some of the code in this module was forked from https://github.com/ibab/rust-ad in 2016.
+// The code in this repository is based on and was forked from https://github.com/elrnv/autofloat in 2024.
+// The copyright notice is reproduced below:
+//
+// ```
+// Copyright (c) 2018 Egor Larionov
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// ```
+//
+// The repository mentioned above was also forked from https://github.com/ibab/rust-ad in 2016.
 // The copyright notice is reproduced below:
 //
 // ```
@@ -18,10 +43,7 @@
 // This crate is licensed under the terms described in the README.md, which is located at the root
 // directory of this crate.
 
-//! This module defines forward automatic differentiation.
-//! This mode of `autodiff` is most efficient when computing derivatives with more inputs than outputs.
-//! It is also useful for computing Jacobian products (see [crate root docs](crate::lib) for examples).
-
+/// This module defines scalar data types to perform forward automatic differentiation.
 use num_traits::{
     Bounded, Float, FloatConst, FromPrimitive, Num, NumCast, One, Signed, ToPrimitive, Zero,
 };
@@ -61,7 +83,7 @@ pub type FT<T> = F<T, T>;
 
 /// First order dual number with `f64`.
 ///
-/// This type is mainly kept for compatibility with autodiff v0.2 and v0.3.
+/// This type is mainly kept for compatibility with autofloat v0.2 and v0.3.
 pub type F1 = FT<f64>;
 
 /*
@@ -1378,7 +1400,8 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use autodiff::*;
+/// use autofloat::*;
+/// use num_traits::float::Float;
 /// // Define a function `f(x) = e^{-0.5*x^2}`
 /// let f = |x: FT<f64>| (-x * x / F::cst(2.0)).exp();
 ///
@@ -1401,7 +1424,7 @@ where
 /// # Examples
 ///
 /// ```rust
-/// use autodiff::*;
+/// use autofloat::*;
 /// // Define a multivariate function `f(x,y) = x*y^2`
 /// let f = |x: &[FT<f64>]| x[0] * x[1] * x[1];
 ///

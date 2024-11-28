@@ -1,28 +1,62 @@
-name: CI
+name: Rust
 
 on:
   push:
-    branches: [ master ]
+    branches: [ "main" ]
   pull_request:
-    branches: [ master ]
+    branches: [ "main" ]
 
 env:
   CARGO_TERM_COLOR: always
 
 jobs:
-  test:
-    name: Build and Test
+  format:
+    name: Check Code Format
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        rust: [stable, nightly]
-
     steps:
-    - uses: actions/checkout@v2
-    - name: Build
-      run: cargo build --verbose
-    - name: Run tests
-      run: cargo test --verbose
-    - name: Run tests with all features
-      run: cargo test --verbose --all-features
+      - uses: actions/checkout@v4
+      - name: Install rustfmt
+        run: rustup component add rustfmt
+      - name: Check Format (Rust)
+        run: cargo fmt --all -- --check
+      - name: Check Format (OpenCL)
+        run: 'find src/ examples/ benches/ -iname "*.cl" -print0 | xargs -0 clang-format --dry-run --Werror'
+  coverage:
+    name: Generate Code Coverage
+    env:
+      RUSTFLAGS: "-Cinstrument-coverage"
+      LLVM_PROFILE_FILE: "${{github.workspace}}/target/coverage/coverage-%p-%m.profraw"
+      POCL_LLVM_CPU_NAME: x86-64
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install llvm-tools
+        run: rustup component add llvm-tools-preview
+      - name: Build
+        run: cargo build --verbose
+      - name: Run tests
+        run: cargo test --verbose
+      - name: Run grcov
+        run: |
+          curl -L https://github.com/mozilla/grcov/releases/latest/download/grcov-x86_64-unknown-linux-gnu.tar.bz2 | tar jxf -
+          ./grcov . -s . --binary-path target/debug --keep-only 'src/*' -t lcov --service-name Rust --branch --ignore-not-existing -o target/coverage/lcov.info
+      - name: Codecov
+        uses: codecov/codecov-action@v4
+        env:
+          CODECOV_TOKEN: ${{secrets.CODECOV_TOKEN}}
+        with:
+          file: ${{github.workspace}}/target/coverage/lcov.info
+          verbose: true
+          fail_ci_if_error: true
+  build:
+    name: Build and Test
+    env:
+      RUSTFLAGS: "--deny warnings"
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build
+        run: cargo build --verbose --examples --tests --benches
+      - name: Run tests
+        run: cargo test --verbose
+
