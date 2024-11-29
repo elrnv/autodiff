@@ -138,6 +138,8 @@ where
 #[cfg(test)]
 mod test {
 
+    use crate::autofloat::test::assert_autofloat_eq;
+
     use super::*;
 
     #[test]
@@ -154,12 +156,10 @@ mod test {
     #[test]
     fn create_variable() {
         let v1 = AutoFloat::<f32, 4>::variable(2.5, 2);
-        assert_eq!(2.5, v1.x);
-        assert_eq!([0.0, 0.0, 1.0, 0.0], v1.dx);
+        assert_autofloat_eq!(AutoFloat::new(2.5, [0.0, 0.0, 1.0, 0.0]), v1);
 
         let v2 = AutoFloat::<f64, 6>::variable(-3.2, 0);
-        assert_eq!(-3.2, v2.x);
-        assert_eq!([1.0, 0.0, 0.0, 0.0, 0.0, 0.0], v2.dx);
+        assert_autofloat_eq!(AutoFloat::new(-3.2, [1.0, 0.0, 0.0, 0.0, 0.0, 0.0],), v2);
     }
 
     #[test]

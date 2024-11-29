@@ -6,16 +6,12 @@
 
 `autofloat` is a pure Rust library, which implements efficient automatic differentiation in forward mode.
 
-The library currently provides scalar datatypes to compute gradients and it optionally integrates with `nalgebra`.
+The library currently provides scalar datatypes to compute efficiently compute gradients.
+Optionally you can use the library with `nalgebra`support to compute gradients and jacobians.
 
-To compute a derivative with respect to a variable using this library:
+# Install
 
-  1. create a variable of type `F`, which implements the `Float` trait from the `num-traits` crate.
-
-  2. compute your function using this variable as the input.
-
-  3. request the derivative from this variable using the `deriv` method.
-
+# Usage
 
 # Examples
 
@@ -65,7 +61,6 @@ This repository is licensed under either of
 
 at your option.
 
-
 # Acknowledgements
 
-This library started as a fork of [autodiff](https://github.com/elrnv/autodiff) , which again was forked from [rust-ad](https://github.com/ibab/rust-ad).
+This library started as a fork of [autodiff](https://github.com/elrnv/autodiff) by Egor Larionov, which again was forked from [rust-ad](https://github.com/ibab/rust-ad) by Igor Babuschkin. Some parts of the code base still contain signifcant parts of these upstream repositories.

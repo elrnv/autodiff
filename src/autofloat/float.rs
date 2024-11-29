@@ -1,6 +1,6 @@
 use std::num::FpCategory;
 
-use num_traits::{Float, FloatConst, Zero};
+use num_traits::{float::FloatCore, Float, FloatConst, Zero};
 
 use super::{binary_op, unary_op, AutoFloat};
 
@@ -73,36 +73,112 @@ where
     }
 }
 
+impl<T, const N: usize> FloatCore for AutoFloat<T, N>
+where
+    T: FloatCore,
+{
+    fn infinity() -> Self {
+        Self::constant(T::infinity())
+    }
+
+    fn neg_infinity() -> Self {
+        Self::constant(T::neg_infinity())
+    }
+
+    fn nan() -> Self {
+        Self::constant(T::nan())
+    }
+
+    fn neg_zero() -> Self {
+        Self::constant(T::neg_zero())
+    }
+
+    fn min_value() -> Self {
+        Self::constant(T::min_value())
+    }
+
+    fn min_positive_value() -> Self {
+        Self::constant(T::min_positive_value())
+    }
+
+    fn epsilon() -> Self {
+        Self::constant(T::epsilon())
+    }
+
+    fn max_value() -> Self {
+        Self::constant(T::max_value())
+    }
+
+    fn classify(self) -> FpCategory {
+        self.x.classify()
+    }
+
+    fn to_degrees(self) -> Self {
+        AutoFloat {
+            x: FloatCore::to_degrees(self.x),
+            dx: unary_op(self.dx, FloatCore::to_degrees),
+        }
+    }
+
+    fn to_radians(self) -> Self {
+        AutoFloat {
+            x: FloatCore::to_radians(self.x),
+            dx: unary_op(self.dx, FloatCore::to_radians),
+        }
+    }
+
+    fn integer_decode(self) -> (u64, i16, i8) {
+        self.x.integer_decode()
+    }
+
+    fn max(self, other: AutoFloat<T, N>) -> Self {
+        if self.x < other.x {
+            other
+        } else {
+            self
+        }
+    }
+
+    fn min(self, other: AutoFloat<T, N>) -> Self {
+        if self.x > other.x {
+            other
+        } else {
+            self
+        }
+    }
+}
+
+#[cfg(feature = "std")]
 impl<T, const N: usize> Float for AutoFloat<T, N>
 where
     T: Float + Zero + Copy,
 {
     fn nan() -> Self {
-        AutoFloat::constant(T::nan())
+        Self::constant(T::nan())
     }
 
     fn infinity() -> Self {
-        AutoFloat::constant(T::infinity())
+        Self::constant(T::infinity())
     }
 
     fn neg_infinity() -> Self {
-        AutoFloat::constant(T::neg_infinity())
+        Self::constant(T::neg_infinity())
     }
 
     fn neg_zero() -> Self {
-        AutoFloat::constant(T::neg_zero())
+        Self::constant(T::neg_zero())
     }
 
     fn min_value() -> Self {
-        AutoFloat::constant(T::min_value())
+        Self::constant(T::min_value())
     }
 
     fn min_positive_value() -> Self {
-        AutoFloat::constant(T::min_positive_value())
+        Self::constant(T::min_positive_value())
     }
 
     fn max_value() -> Self {
-        AutoFloat::constant(T::max_value())
+        Self::constant(T::max_value())
     }
 
     fn is_nan(self) -> bool {
@@ -504,7 +580,222 @@ where
     /// Raise this number to the `n`'th power.
     ///
     /// This is a generic version of `Float::powf`.
-    pub fn pow(self, n: impl Into<AutoFloat<T, N>>) -> AutoFloat<T, N> {
+    pub fn pow<U>(self, n: U) -> AutoFloat<T, N>
+    where
+        U: Into<AutoFloat<T, N>>,
+    {
         self.powf(n.into())
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use super::*;
+    use crate::{autofloat::test::assert_autofloat_eq, AutoFloat, AutoFloat1};
+
+    #[test]
+    fn sin() {
+        let v1 = AutoFloat::new(2.0, [1.3, 0.5]).sin();
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(2.0.sin(), [1.3 * 2.0.cos(), 0.5 * 2.0.cos()])
+        );
+    }
+
+    #[test]
+    fn cos() {
+        let v1 = AutoFloat::new(2.0, [1.3, 0.5]).cos();
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(2.0.cos(), [1.3 * -2.0.sin(), 0.5 * -2.0.sin()])
+        );
+    }
+
+    #[test]
+    fn tan() {
+        let v1 = AutoFloat::new(2.0, [1.3, 0.5]).tan();
+        let factor = 1.0 / (2.0.cos() * 2.0.cos());
+        assert_autofloat_eq!(v1, AutoFloat::new(2.0.tan(), [1.3 * factor, 0.5 * factor]));
+    }
+
+    #[test]
+    fn asin() {
+        let v1 = AutoFloat::new(0.25, [1.3, 0.5]).asin();
+        let factor = 1.0 / (1.0 - (0.25 * 0.25)).sqrt();
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(0.25.asin(), [1.3 * factor, 0.5 * factor])
+        );
+    }
+
+    #[test]
+    fn acos() {
+        let v1 = AutoFloat::new(0.25, [1.3, 0.5]).acos();
+        let factor = -1.0 / (1.0 - (0.25 * 0.25)).sqrt();
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(0.25.acos(), [1.3 * factor, 0.5 * factor])
+        );
+    }
+
+    #[test]
+    fn atan() {
+        let v1 = AutoFloat::new(0.25, [1.3, 0.5]).atan();
+        let factor = 1.0 / ((0.25 * 0.25) + 1.0);
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(0.25.atan(), [1.3 * factor, 0.5 * factor])
+        );
+    }
+
+    #[test]
+    fn atan2() {
+        let x = AutoFloat::new(2.0, [1.3, 0.5]);
+        let y = AutoFloat::new(3.0, [-1.0, 1.9]);
+        let v1 = y.atan2(x);
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(3.0.atan2(2.0), [-0.4538461538461539, 0.17692307692307693])
+        );
+    }
+
+    #[test]
+    fn exp() {
+        let v1 = AutoFloat::new(2.0, [1.3, 0.5]).exp();
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(2.0.exp(), [9.605772928609845, 3.694528049465325])
+        );
+    }
+
+    #[test]
+    fn sqrt() {
+        let x = AutoFloat1::variable(0.2, 0).sqrt();
+        assert_autofloat_eq!(x, AutoFloat::new(0.2.sqrt(), [0.5 / 0.2.sqrt()]));
+
+        // Test that taking a square root of zero does not produce NaN.
+        // By convention we take 0/0 = 0 here.
+        let x = AutoFloat1::constant(0.0).sqrt();
+        assert_autofloat_eq!(x, AutoFloat::new(0.0, [0.0]));
+    }
+
+    #[test]
+    fn cbrt() {
+        let x = AutoFloat1::variable(0.2, 0).cbrt();
+        assert_autofloat_eq!(
+            x,
+            AutoFloat::new(0.2.cbrt(), [1.0 / (3.0 * 0.2.cbrt() * 0.2.cbrt())])
+        );
+
+        // Test that taking a cube root of zero does not produce NaN.
+        // By convention we take 0/0 = 0 here.
+        let x = AutoFloat1::constant(0.0).cbrt();
+        assert_autofloat_eq!(x, AutoFloat::new(0.0, [0.0]));
+    }
+
+    #[test]
+    fn float_to_degrees() {
+        let x = Float::to_degrees(AutoFloat1::variable(0.2, 0));
+        assert_autofloat_eq!(
+            x,
+            AutoFloat::new(Float::to_degrees(0.2), [Float::to_degrees(1.0)])
+        );
+    }
+
+    #[test]
+    fn float_to_radians() {
+        let x = Float::to_radians(AutoFloat1::variable(0.2, 0));
+        assert_autofloat_eq!(
+            x,
+            AutoFloat::new(Float::to_radians(0.2), [Float::to_radians(1.0)])
+        );
+    }
+
+    #[test]
+    fn float_min_max_value() {
+        // Test basic arithmetic on F.
+        let a = AutoFloat1::variable(1.0, 0);
+        let mut b = AutoFloat1::constant(2.0);
+
+        b = Float::min(b, a);
+        assert_autofloat_eq!(AutoFloat::new(1.0, [1.0]), b);
+
+        b = AutoFloat::constant(2.0);
+        b = Float::min(a, b);
+        assert_autofloat_eq!(AutoFloat::new(1.0, [1.0]), b);
+
+        let b = AutoFloat::constant(2.0);
+
+        let c = Float::max(a, b);
+        assert_autofloat_eq!(AutoFloat::new(2.0, [0.0]), c);
+
+        // Make sure that our min and max are consistent with the internal implementation to avoid
+        // inconsistencies in the future. In particular we look at tie breaking.
+
+        let b = AutoFloat::constant(1.0);
+        let minf = Float::min(a.x, b.x);
+        assert_autofloat_eq!(
+            AutoFloat::new(minf, if minf == a.x { a.dx } else { b.dx }),
+            Float::min(a, b),
+        );
+
+        let maxf = Float::max(a.x, b.x);
+        assert_autofloat_eq!(
+            AutoFloat::new(maxf, if maxf == a.x { a.dx } else { b.dx }),
+            Float::max(a, b),
+        );
+    }
+
+    #[test]
+    fn float_core_to_degrees() {
+        let x = FloatCore::to_degrees(AutoFloat1::variable(0.2, 0));
+        assert_autofloat_eq!(
+            x,
+            AutoFloat::new(FloatCore::to_degrees(0.2), [FloatCore::to_degrees(1.0)])
+        );
+    }
+
+    #[test]
+    fn float_core_to_radians() {
+        let x = FloatCore::to_radians(AutoFloat1::variable(0.2, 0));
+        assert_autofloat_eq!(
+            x,
+            AutoFloat::new(FloatCore::to_radians(0.2), [FloatCore::to_radians(1.0)])
+        );
+    }
+
+    #[test]
+    fn float_core_min_max_value() {
+        // Test basic arithmetic on F.
+        let a = AutoFloat1::variable(1.0, 0);
+        let mut b = AutoFloat1::constant(2.0);
+
+        b = FloatCore::min(b, a);
+        assert_autofloat_eq!(AutoFloat::new(1.0, [1.0]), b);
+
+        b = AutoFloat::constant(2.0);
+        b = FloatCore::min(a, b);
+        assert_autofloat_eq!(AutoFloat::new(1.0, [1.0]), b);
+
+        let b = AutoFloat::constant(2.0);
+
+        let c = FloatCore::max(a, b);
+        assert_autofloat_eq!(AutoFloat::new(2.0, [0.0]), c);
+
+        // Make sure that our min and max are consistent with the internal implementation to avoid
+        // inconsistencies in the future. In particular we look at tie breaking.
+
+        let b = AutoFloat::constant(1.0);
+        let minf = FloatCore::min(a.x, b.x);
+        assert_autofloat_eq!(
+            AutoFloat::new(minf, if minf == a.x { a.dx } else { b.dx }),
+            FloatCore::min(a, b),
+        );
+
+        let maxf = FloatCore::max(a.x, b.x);
+        assert_autofloat_eq!(
+            AutoFloat::new(maxf, if maxf == a.x { a.dx } else { b.dx }),
+            FloatCore::max(a, b),
+        );
     }
 }

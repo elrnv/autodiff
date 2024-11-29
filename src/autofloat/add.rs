@@ -107,6 +107,8 @@ where
 #[cfg(test)]
 mod test {
 
+    use crate::autofloat::test::assert_autofloat_eq;
+
     use super::*;
 
     #[test]
@@ -115,14 +117,12 @@ mod test {
         let v2 = AutoFloat::new(3.0, [-2.0, 1.0]);
         let r1 = v1 + v2;
 
-        assert_eq!(5.0, r1.x);
-        assert_eq!([-1.0, 4.0], r1.dx);
+        assert_autofloat_eq!(AutoFloat::new(5.0, [-1.0, 4.0]), r1);
 
         let mut r2 = v1;
         r2 += v2;
 
-        assert_eq!(r1.x, r2.x);
-        assert_eq!(r1.dx, r2.dx);
+        assert_autofloat_eq!(r1, r2);
     }
 
     #[test]
@@ -131,17 +131,14 @@ mod test {
         let c1: f32 = 4.0;
 
         let r1 = v1 + c1;
-        assert_eq!(6.0, r1.x);
-        assert_eq!([1.0, 3.0], r1.dx);
+        assert_autofloat_eq!(AutoFloat::new(6.0, [1.0, 3.0]), r1);
 
         let r2 = c1 + v1;
-        assert_eq!(r1.x, r2.x);
-        assert_eq!(r1.dx, r2.dx);
+        assert_autofloat_eq!(r1, r2);
 
         let mut r3 = v1;
         r3 += c1;
-        assert_eq!(r1.x, r3.x);
-        assert_eq!(r1.dx, r3.dx);
+        assert_autofloat_eq!(r1, r3);
     }
 
     #[test]
@@ -150,17 +147,14 @@ mod test {
         let c1: f64 = 4.0;
 
         let r1 = v1 + c1;
-        assert_eq!(6.0, r1.x);
-        assert_eq!([1.0, 3.0], r1.dx);
+        assert_autofloat_eq!(AutoFloat::new(6.0, [1.0, 3.0]), r1);
 
         let r2 = c1 + v1;
-        assert_eq!(r1.x, r2.x);
-        assert_eq!(r1.dx, r2.dx);
+        assert_autofloat_eq!(r1, r2);
 
         let mut r3 = v1;
         r3 += c1;
-        assert_eq!(r1.x, r3.x);
-        assert_eq!(r1.dx, r3.dx);
+        assert_autofloat_eq!(r1, r3);
     }
 
     #[test]
@@ -172,8 +166,7 @@ mod test {
 
         let r: AutoFloat<f32, 2> = vals.into_iter().sum();
 
-        assert_eq!(9.0, r.x);
-        assert_eq!([2.0, -6.0], r.dx);
+        assert_autofloat_eq!(AutoFloat::new(9.0, [2.0, -6.0]), r);
     }
 
     #[test]
@@ -182,7 +175,6 @@ mod test {
 
         let r: AutoFloat<f32, 2> = vals.into_iter().sum();
 
-        assert_eq!(8.0, r.x);
-        assert_eq!([0.0, 0.0], r.dx);
+        assert_autofloat_eq!(AutoFloat::new(8.0, [0.0, 0.0]), r);
     }
 }

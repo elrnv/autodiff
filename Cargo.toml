@@ -27,5 +27,6 @@ rand = "0.8"
 approx = "0.5"
 
 [features]
-default = []
-nalgebra = ["dep:nalgebra", "dep:approx", "dep:simba"]
+std = []
+default = ["std"]
+nalgebra = ["dep:nalgebra", "approx", "simba"]

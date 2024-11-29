@@ -21,6 +21,20 @@ where
     }
 }
 
+impl<T, const N: usize> Rem<T> for AutoFloat<T, N>
+where
+    T: Rem<Output = T> + Clone,
+{
+    type Output = Self;
+
+    fn rem(self, rhs: T) -> Self::Output {
+        AutoFloat {
+            x: self.x % rhs.clone(),
+            dx: unary_op(self.dx, |v| v % rhs.clone()),
+        }
+    }
+}
+
 impl<const N: usize> Rem<AutoFloat<f64, N>> for f64 {
     type Output = AutoFloat<f64, N>;
 
@@ -78,5 +92,59 @@ where
     fn rem_assign(&mut self, rhs: f32) {
         self.x %= rhs;
         self.dx.iter_mut().for_each(|v| (*v) %= rhs);
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::autofloat::test::assert_autofloat_eq;
+
+    use super::*;
+
+    #[test]
+    fn rem_autofloats() {
+        let v1 = AutoFloat::new(3.0, [1.0, 3.0]);
+        let v2 = AutoFloat::new(2.0, [-2.0, 1.0]);
+        let r1 = v1 % v2;
+
+        assert_autofloat_eq!(AutoFloat::new(1.0, [3.0, 2.0]), r1);
+
+        let mut r2 = v1;
+        r2 %= v2;
+
+        assert_autofloat_eq!(r1, r2);
+    }
+
+    #[test]
+    fn div_autofloat_f32() {
+        let v1 = AutoFloat::<f32, 2>::new(2.0, [1.0, 3.0]);
+        let c1: f32 = 6.0;
+
+        let r1 = v1 % c1;
+        assert_autofloat_eq!(AutoFloat::new(2.0, [1.0, 3.0]), r1);
+
+        let r2 = c1 % v1;
+        assert_autofloat_eq!(AutoFloat::new(0.0, [-3.0, -9.0]), r2);
+
+        let mut r3 = v1;
+        r3 %= c1;
+        assert_autofloat_eq!(r1, r3);
+    }
+
+    #[test]
+    fn div_autofloat_f64() {
+        let v1 = AutoFloat::<f64, 2>::new(2.0, [1.0, 3.0]);
+        let c1: f64 = 6.0;
+
+        let r1 = v1 % c1;
+        assert_autofloat_eq!(AutoFloat::new(2.0, [1.0, 3.0]), r1);
+
+        let r2 = c1 % v1;
+        assert_autofloat_eq!(AutoFloat::new(0.0, [-3.0, -9.0]), r2);
+
+        let mut r3 = v1;
+        r3 %= c1;
+        assert_autofloat_eq!(r1, r3);
     }
 }

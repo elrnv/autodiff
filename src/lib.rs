@@ -1,3 +1,48 @@
+// The code in this repository is based on and was forked from https://github.com/elrnv/autofloat in 2024.
+// The copyright notice is reproduced below:
+//
+// ```
+// Copyright (c) 2018 Egor Larionov
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+//
+// THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+// IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+// FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+// AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+// LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+// OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+// SOFTWARE.
+// ```
+//
+// The repository mentioned above was also forked from https://github.com/ibab/rust-ad in 2016.
+// The copyright notice is reproduced below:
+//
+// ```
+// Copyright (c) 2014 Igor Babuschkin
+//
+// Permission is hereby granted, free of charge, to any person obtaining a copy
+// of this software and associated documentation files (the "Software"), to deal
+// in the Software without restriction, including without limitation the rights
+// to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+// copies of the Software, and to permit persons to whom the Software is
+// furnished to do so, subject to the following conditions:
+//
+// The above copyright notice and this permission notice shall be included in all
+// copies or substantial portions of the Software.
+// ```
+//
+// This crate is licensed under the terms described in the README.md, which is located at the root
+// directory of this crate.
+
 ///
 /// This crate provides a library for performing automatic differentiation in forward mode.
 ///
@@ -24,9 +69,9 @@
 /// ```
 mod autofloat;
 pub use autofloat::*;
-#[cfg(feature = "nalgebra")]
+#[cfg(feature = "approx")]
 mod approx;
 #[cfg(feature = "nalgebra")]
 mod nalgebra;
-#[cfg(feature = "nalgebra")]
+#[cfg(feature = "simba")]
 mod simba;

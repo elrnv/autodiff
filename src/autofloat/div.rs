@@ -1,19 +1,21 @@
 use std::ops::{Div, DivAssign, Mul, Sub, SubAssign};
 
+use num_traits::One;
+
 use super::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> Div<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Div<Output = T> + Mul<Output = T> + Sub<Output = T> + Clone,
+    T: Div<Output = T> + Mul<Output = T> + Sub<Output = T> + One + Clone,
 {
     type Output = Self;
 
     fn div(self, rhs: AutoFloat<T, N>) -> Self::Output {
-        let denom = rhs.x.clone() * rhs.x.clone();
+        let factor = T::one() / (rhs.x.clone() * rhs.x.clone());
         AutoFloat {
             x: self.x.clone() / rhs.x.clone(),
             dx: binary_op(self.dx, rhs.dx, |l, r| {
-                (l * rhs.x.clone() - r * self.x.clone()) / denom.clone()
+                (l * rhs.x.clone() - r * self.x.clone()) * factor.clone()
             }),
         }
     }
@@ -81,5 +83,59 @@ where
     fn div_assign(&mut self, rhs: T) {
         self.x /= rhs.clone();
         self.dx.iter_mut().for_each(|v| (*v) /= rhs.clone());
+    }
+}
+
+#[cfg(test)]
+mod test {
+
+    use crate::autofloat::test::assert_autofloat_eq;
+
+    use super::*;
+
+    #[test]
+    fn div_autofloats() {
+        let v1 = AutoFloat::new(3.0, [1.0, 3.0]);
+        let v2 = AutoFloat::new(2.0, [-2.0, 1.0]);
+        let r1 = v1 / v2;
+
+        assert_autofloat_eq!(AutoFloat::new(1.5, [2.0, 0.75]), r1);
+
+        let mut r2 = v1;
+        r2 /= v2;
+
+        assert_autofloat_eq!(r1, r2);
+    }
+
+    #[test]
+    fn div_autofloat_f32() {
+        let v1 = AutoFloat::<f32, 2>::new(2.0, [1.0, 3.0]);
+        let c1: f32 = 4.0;
+
+        let r1 = v1 / c1;
+        assert_autofloat_eq!(AutoFloat::new(0.5, [0.25, 0.75]), r1);
+
+        let r2 = c1 / v1;
+        assert_autofloat_eq!(AutoFloat::new(2.0, [-1.0, -3.0]), r2);
+
+        let mut r3 = v1;
+        r3 /= c1;
+        assert_autofloat_eq!(r1, r3);
+    }
+
+    #[test]
+    fn div_autofloat_f64() {
+        let v1 = AutoFloat::<f64, 2>::new(2.0, [1.0, 3.0]);
+        let c1: f64 = 4.0;
+
+        let r1 = v1 / c1;
+        assert_autofloat_eq!(AutoFloat::new(0.5, [0.25, 0.75]), r1);
+
+        let r2 = c1 / v1;
+        assert_autofloat_eq!(AutoFloat::new(2.0, [-1.0, -3.0]), r2);
+
+        let mut r3 = v1;
+        r3 /= c1;
+        assert_autofloat_eq!(r1, r3);
     }
 }

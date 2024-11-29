@@ -202,3 +202,119 @@ where
         AutoFloat::constant(T::max_value())
     }
 }
+
+#[cfg(test)]
+mod test {
+    use core::f32;
+
+    use crate::autofloat::test::assert_autofloat_eq;
+
+    use super::*;
+
+    #[test]
+    fn to_primitive() {
+        let v1 = AutoFloat::<f32, 2>::new(3.0, [1.0, 2.0]);
+
+        assert_eq!(v1.to_i8(), Some(3));
+        assert_eq!(v1.to_i16(), Some(3));
+        assert_eq!(v1.to_i32(), Some(3));
+        assert_eq!(v1.to_i64(), Some(3));
+        assert_eq!(v1.to_i128(), Some(3));
+        assert_eq!(v1.to_isize(), Some(3));
+
+        assert_eq!(v1.to_u8(), Some(3));
+        assert_eq!(v1.to_u16(), Some(3));
+        assert_eq!(v1.to_u32(), Some(3));
+        assert_eq!(v1.to_u64(), Some(3));
+        assert_eq!(v1.to_u128(), Some(3));
+        assert_eq!(v1.to_usize(), Some(3));
+
+        assert_eq!(v1.to_f32(), Some(3.0));
+        assert_eq!(v1.to_f64(), Some(3.0));
+    }
+
+    #[test]
+    fn from_primitive() {
+        let v1 = AutoFloat::<f32, 2>::new(3.0, [0.0, 0.0]);
+
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_i8(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_i16(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_i32(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_i64(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_i128(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_isize(3).unwrap(), v1);
+
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_u8(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_u16(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_u32(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_u64(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_u128(3).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_usize(3).unwrap(), v1);
+
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_f32(3.0).unwrap(), v1);
+        assert_autofloat_eq!(AutoFloat::<f32, 2>::from_f64(3.0).unwrap(), v1);
+    }
+
+    #[test]
+    fn zero() {
+        assert_autofloat_eq!(
+            AutoFloat::<f32, 2>::zero(),
+            AutoFloat::<f32, 2>::new(0.0, [0.0, 0.0])
+        );
+
+        let v1 = AutoFloat::<f32, 2>::new(0.0, [1.0, 2.0]);
+        let v2 = AutoFloat::<f32, 2>::new(-2.0, [4.0, 3.0]);
+
+        assert!(v1.is_zero());
+        assert!(!v2.is_zero());
+    }
+
+    #[test]
+    fn one() {
+        assert_autofloat_eq!(
+            AutoFloat::<f32, 2>::one(),
+            AutoFloat::<f32, 2>::new(1.0, [0.0, 0.0])
+        );
+
+        let v1 = AutoFloat::<f32, 2>::new(1.0, [1.0, 2.0]);
+        let v2 = AutoFloat::<f32, 2>::new(-2.0, [4.0, 3.0]);
+
+        assert!(v1.is_one());
+        assert!(!v2.is_one());
+    }
+
+    #[test]
+    fn signed() {
+        let v1 = AutoFloat::<f32, 2>::new(1.0, [1.0, 2.0]);
+        let v2 = AutoFloat::<f32, 2>::new(-2.0, [4.0, 3.0]);
+        let v3 = AutoFloat::<f32, 2>::new(0.0, [-1.0, 2.0]);
+
+        assert!(!v1.is_negative());
+        assert!(v2.is_negative());
+        assert!(!v3.is_negative());
+
+        assert!(v1.is_positive());
+        assert!(!v2.is_positive());
+        assert!(v3.is_positive());
+
+        assert_autofloat_eq!(v1.signum(), AutoFloat::new(1.0, [0.0, 0.0]));
+        assert_autofloat_eq!(v2.signum(), AutoFloat::new(-1.0, [0.0, 0.0]));
+        assert_autofloat_eq!(v3.signum(), AutoFloat::new(1.0, [0.0, 0.0]));
+
+        assert_autofloat_eq!(v1.abs(), AutoFloat::new(1.0, [1.0, 2.0]));
+        assert_autofloat_eq!(v2.abs(), AutoFloat::new(2.0, [-4.0, -3.0]));
+        assert_autofloat_eq!(v3.abs(), AutoFloat::new(0.0, [-1.0, 2.0]));
+    }
+
+    #[test]
+    fn bounded() {
+        assert_autofloat_eq!(
+            AutoFloat::<f32, 2>::min_value(),
+            AutoFloat::new(f32::MIN, [0.0, 0.0])
+        );
+        assert_autofloat_eq!(
+            AutoFloat::<f32, 2>::max_value(),
+            AutoFloat::new(f32::MAX, [0.0, 0.0])
+        );
+    }
+}
