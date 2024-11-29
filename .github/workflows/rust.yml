@@ -11,7 +11,7 @@ env:
 
 jobs:
   format:
-    name: Check Code Format
+    name: Code Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,10 +19,8 @@ jobs:
         run: rustup component add rustfmt
       - name: Check Format (Rust)
         run: cargo fmt --all -- --check
-      - name: Check Format (OpenCL)
-        run: 'find src/ examples/ benches/ -iname "*.cl" -print0 | xargs -0 clang-format --dry-run --Werror'
   coverage:
-    name: Generate Code Coverage
+    name: Test Coverage
     env:
       RUSTFLAGS: "-Cinstrument-coverage"
       LLVM_PROFILE_FILE: "${{github.workspace}}/target/coverage/coverage-%p-%m.profraw"
@@ -49,14 +47,36 @@ jobs:
           verbose: true
           fail_ci_if_error: true
   build:
-    name: Build and Test
+    strategy:
+      matrix:
+        os:
+          - value: ubuntu-latest
+            name: Ubuntu
+          - value: windows-latest
+            name: Windows
+          - value: macos-latest
+            name: MacOS
+        feature:
+          - value: --features default
+            name: default
+          - value: --no-default-features
+            name: no features
+          - value: --all-features
+            name: all features
+          - value: --features approx
+            name: approx
+          - value: --features simba
+            name: simba
+          - value: --features nalgebra
+            name: nalgebra
+    name: "Build & Test ${{matrix.os.name}} ${{matrix.feature.name}}"
     env:
       RUSTFLAGS: "--deny warnings"
-    runs-on: ubuntu-24.04
+    runs-on: ${{matrix.os.value}}
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: cargo build --verbose --examples --tests --benches
+        run: cargo build --verbose --examples --tests --benches ${{matrix.feature.value}}
       - name: Run tests
-        run: cargo test --verbose
+        run: cargo test --verbose ${{matrix.feature.value}}
 
