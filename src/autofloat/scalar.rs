@@ -141,7 +141,7 @@ where
 #[cfg(test)]
 mod test {
 
-    use crate::autofloat::test::assert_autofloat_eq;
+    use crate::test::assert_autofloat_eq;
 
     use super::*;
 

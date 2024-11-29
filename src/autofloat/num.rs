@@ -207,7 +207,7 @@ where
 mod test {
     use core::f32;
 
-    use crate::autofloat::test::assert_autofloat_eq;
+    use crate::test::assert_autofloat_eq;
 
     use super::*;
 

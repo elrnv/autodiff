@@ -1,10 +1,7 @@
 [package]
 name = "autofloat"
 version = "0.7.0"
-authors = [
-    "Fabian Meyer <rookfighter@posteo.org",
-    "Egor Larionov <egor.larionov@gmail.com>",
-]
+authors = ["Fabian Meyer <rookfighter@posteo.org"]
 license = "MIT OR Apache-2.0"
 description = "Pure Rust library for efficient automatic differentiation"
 edition = "2021"
@@ -13,7 +10,7 @@ homepage = "https://github.com/rookfighter/autofloat"
 repository = "https://github.com/rookfighter/autofloat"
 readme = "README.md"
 
-keywords = ["auto", "derivative", "automatic", "differentiation"]
+keywords = ["auto", "derivative", "automatic", "differentiation", "gradient"]
 
 [dependencies]
 num-traits = "0.2"
