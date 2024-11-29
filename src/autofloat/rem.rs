@@ -2,11 +2,11 @@ use std::ops::{Div, Rem, RemAssign, Sub, SubAssign};
 
 use num_traits::One;
 
-use super::{binary_op, unary_op, AutoFloat};
+use crate::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> Rem<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Clone + Rem<Output = T> + Div<Output = T> + Sub<Output = T> + One,
+    T: Copy + Default + Rem<Output = T> + Div<Output = T> + Sub<Output = T> + One,
 {
     type Output = Self;
 
@@ -23,14 +23,14 @@ where
 
 impl<T, const N: usize> Rem<T> for AutoFloat<T, N>
 where
-    T: Rem<Output = T> + Clone,
+    T: Rem<Output = T> + Copy + Default,
 {
     type Output = Self;
 
     fn rem(self, rhs: T) -> Self::Output {
         AutoFloat {
-            x: self.x % rhs.clone(),
-            dx: unary_op(self.dx, |v| v % rhs.clone()),
+            x: self.x % rhs,
+            dx: unary_op(self.dx, |v| v % rhs),
         }
     }
 }

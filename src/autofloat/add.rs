@@ -4,11 +4,11 @@ use std::{
     ops::{Add, AddAssign},
 };
 
-use super::{binary_op, AutoFloat};
+use crate::{binary_op, AutoFloat};
 
 impl<T, const N: usize> Add<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Add<Output = T> + Clone,
+    T: Add<Output = T> + Copy + Default,
 {
     type Output = Self;
 
@@ -78,7 +78,7 @@ where
 
 impl<T, const N: usize> Sum for AutoFloat<T, N>
 where
-    T: AddAssign + Zero + Copy,
+    T: AddAssign + Zero + Copy + Default,
 {
     fn sum<I>(iter: I) -> Self
     where
@@ -94,7 +94,7 @@ where
 
 impl<T, const N: usize> std::iter::Sum<T> for AutoFloat<T, N>
 where
-    T: AddAssign + Copy + Zero,
+    T: AddAssign + Copy + Default + Zero,
 {
     fn sum<I>(iter: I) -> Self
     where

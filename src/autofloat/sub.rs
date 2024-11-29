@@ -1,10 +1,10 @@
 use std::ops::{Sub, SubAssign};
 
-use super::{binary_op, unary_op, AutoFloat};
+use crate::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> Sub<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Sub<Output = T> + Clone,
+    T: Sub<Output = T> + Copy + Default,
 {
     type Output = Self;
 

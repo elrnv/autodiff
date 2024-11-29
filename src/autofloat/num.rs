@@ -1,6 +1,6 @@
 use num_traits::{Bounded, FromPrimitive, Num, NumCast, One, Signed, ToPrimitive, Zero};
 
-use super::AutoFloat;
+use crate::AutoFloat;
 
 impl<T, const N: usize> ToPrimitive for AutoFloat<T, N>
 where
@@ -127,7 +127,7 @@ where
 
 impl<T, const N: usize> Zero for AutoFloat<T, N>
 where
-    T: Zero + Copy,
+    T: Zero + Copy + Default,
 {
     fn zero() -> Self {
         AutoFloat::constant(T::zero())
@@ -140,7 +140,7 @@ where
 
 impl<T, const N: usize> One for AutoFloat<T, N>
 where
-    T: Copy + Zero + One,
+    T: Copy + Default + Zero + One,
 {
     fn one() -> Self {
         AutoFloat::constant(T::one())
@@ -149,7 +149,7 @@ where
 
 impl<T, const N: usize> Num for AutoFloat<T, N>
 where
-    T: Copy + Zero + Num,
+    T: Copy + Default + Zero + Num,
 {
     type FromStrRadixErr = T::FromStrRadixErr;
 
@@ -160,7 +160,7 @@ where
 
 impl<T, const N: usize> Signed for AutoFloat<T, N>
 where
-    T: Signed + Zero + Copy + Num + PartialOrd,
+    T: Signed + Zero + Copy + Default + Num + PartialOrd,
 {
     fn abs(&self) -> Self {
         if self.is_negative() {

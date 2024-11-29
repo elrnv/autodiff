@@ -1,44 +1,50 @@
-use super::F;
 use num_traits::Zero;
 use simba::scalar::{SubsetOf, SupersetOf};
 
-impl<V: SubsetOf<V>, D: SubsetOf<D>> SubsetOf<F<V, D>> for F<V, D> {
-    fn to_superset(&self) -> F<V, D> {
-        F {
+use crate::{unary_op, AutoFloat};
+
+impl<T, const N: usize> SubsetOf<AutoFloat<T, N>> for AutoFloat<T, N>
+where
+    T: SubsetOf<T> + Copy + Default,
+{
+    fn to_superset(&self) -> Self {
+        AutoFloat {
             x: self.x.to_superset(),
-            dx: self.dx.to_superset(),
+            dx: unary_op(self.dx.clone(), |v| v.to_superset()),
         }
     }
-    fn from_superset_unchecked(element: &F<V, D>) -> Self {
-        F {
-            x: V::from_superset_unchecked(&element.x),
-            dx: D::from_superset_unchecked(&element.dx),
+    fn from_superset_unchecked(element: &AutoFloat<T, N>) -> Self {
+        AutoFloat {
+            x: T::from_superset_unchecked(&element.x),
+            dx: unary_op(element.dx.clone(), |v| T::from_superset_unchecked(&v)),
         }
     }
-    fn is_in_subset(element: &F<V, D>) -> bool {
-        V::is_in_subset(&element.x) && D::is_in_subset(&element.dx)
+    fn is_in_subset(element: &AutoFloat<T, N>) -> bool {
+        T::is_in_subset(&element.x) && element.dx.iter().all(T::is_in_subset)
     }
 }
 
-impl<V: SubsetOf<V>, D: SubsetOf<D> + num_traits::Zero> SubsetOf<V> for F<V, D> {
-    fn to_superset(&self) -> V {
+impl<T, const N: usize> SubsetOf<T> for AutoFloat<T, N>
+where
+    T: SubsetOf<T> + Zero + Copy,
+{
+    fn to_superset(&self) -> T {
         self.x.to_superset()
     }
-    fn from_superset_unchecked(element: &V) -> Self {
-        F::cst(V::from_superset_unchecked(&element))
+    fn from_superset_unchecked(element: &T) -> Self {
+        AutoFloat::constant(T::from_superset_unchecked(&element))
     }
-    fn is_in_subset(element: &V) -> bool {
-        V::is_in_subset(element)
+    fn is_in_subset(element: &T) -> bool {
+        T::is_in_subset(element)
     }
 }
 
-impl<V, D> SupersetOf<f32> for F<V, D>
+impl<T, const N: usize> SupersetOf<f32> for AutoFloat<T, N>
 where
-    V: SupersetOf<f32>,
-    D: Zero,
+    T: SupersetOf<f32> + Zero + Copy,
 {
     fn is_in_subset(&self) -> bool {
-        self.dx.is_zero() && self.x.is_in_subset()
+        self.dx.iter().all(T::is_zero) && self.x.is_in_subset()
     }
 
     fn to_subset_unchecked(&self) -> f32 {
@@ -46,17 +52,16 @@ where
     }
 
     fn from_subset(element: &f32) -> Self {
-        Self::cst(V::from_subset(element))
+        Self::constant(T::from_subset(element))
     }
 }
 
-impl<V, D> SupersetOf<f64> for F<V, D>
+impl<T, const N: usize> SupersetOf<f64> for AutoFloat<T, N>
 where
-    V: SupersetOf<f64>,
-    D: Zero,
+    T: SupersetOf<f64> + Zero + Copy,
 {
     fn is_in_subset(&self) -> bool {
-        self.dx.is_zero() && self.x.is_in_subset()
+        self.dx.iter().all(T::is_zero) && self.x.is_in_subset()
     }
 
     fn to_subset_unchecked(&self) -> f64 {
@@ -64,7 +69,7 @@ where
     }
 
     fn from_subset(element: &f64) -> Self {
-        Self::cst(V::from_subset(element))
+        Self::constant(T::from_subset(element))
     }
 }
 
@@ -72,27 +77,24 @@ where
 mod test {
     use simba::scalar::SupersetOf;
 
-    use crate::F;
+    use crate::AutoFloat;
 
     macro_rules! create_superset_of_test {
         ($scalar: ty,  $name: ident) => {
             #[test]
             fn $name() {
-                let variable = F::<$scalar, $scalar>::var(2.3);
-                let constant = F::<$scalar, $scalar>::cst(4.1);
+                let v = AutoFloat::<$scalar, 2>::variable(2.3, 0);
+                let c = AutoFloat::<$scalar, 2>::constant(4.1);
 
-                assert!(!SupersetOf::<$scalar>::is_in_subset(&variable));
-                assert_eq!(None, SupersetOf::<$scalar>::to_subset(&variable));
+                assert!(!SupersetOf::<$scalar>::is_in_subset(&v));
+                assert_eq!(None, SupersetOf::<$scalar>::to_subset(&v));
 
-                assert!(SupersetOf::<$scalar>::is_in_subset(&constant));
-                assert_eq!(
-                    Some(constant.x),
-                    SupersetOf::<$scalar>::to_subset(&constant)
-                );
+                assert!(SupersetOf::<$scalar>::is_in_subset(&c));
+                assert_eq!(Some(c.x), SupersetOf::<$scalar>::to_subset(&c));
 
-                let from_subset: F<$scalar, $scalar> = SupersetOf::<$scalar>::from_subset(&3.1);
+                let from_subset: AutoFloat<$scalar, 2> = SupersetOf::<$scalar>::from_subset(&3.1);
                 assert_eq!(3.1, from_subset.x);
-                assert_eq!(0.0, from_subset.dx);
+                assert_eq!([0.0, 0.0], from_subset.dx);
             }
         };
     }

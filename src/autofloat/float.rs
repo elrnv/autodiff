@@ -2,7 +2,7 @@ use std::num::FpCategory;
 
 use num_traits::{float::FloatCore, Float, FloatConst, Zero};
 
-use super::{binary_op, unary_op, AutoFloat};
+use crate::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> FloatConst for AutoFloat<T, N>
 where
@@ -75,7 +75,7 @@ where
 
 impl<T, const N: usize> FloatCore for AutoFloat<T, N>
 where
-    T: FloatCore,
+    T: FloatCore + Copy + Default,
 {
     fn infinity() -> Self {
         Self::constant(T::infinity())
@@ -151,7 +151,7 @@ where
 #[cfg(feature = "std")]
 impl<T, const N: usize> Float for AutoFloat<T, N>
 where
-    T: Float + Zero + Copy,
+    T: Float + Zero + Copy + Default,
 {
     fn nan() -> Self {
         Self::constant(T::nan())

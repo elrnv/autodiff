@@ -1,12 +1,9 @@
 use num_traits::{One, ToPrimitive, Zero};
-use std::ops::Neg;
+use std::{fmt::Display, ops::Neg};
 
-use super::unary_op;
+use crate::unary_op;
 
 /// A generic forward differentiation `Dual` number.
-///
-/// The derivative is generic in `V` to support composition and alternative
-/// numeric types and in `D` to support higher order differentiation.
 #[derive(Debug, Copy, Clone)]
 pub struct AutoFloat<T, const N: usize> {
     /// The value of the variable.
@@ -29,6 +26,12 @@ impl<T, const N: usize> AutoFloat<T, N> {
     /// Creates an `AutoFloat` with the given value and gradients.
     pub fn new(x: T, dx: [T; N]) -> Self {
         Self { x, dx }
+    }
+}
+
+impl<T, const N: usize> Display for AutoFloat<T, N> {
+    fn fmt(&self, _: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        todo!()
     }
 }
 
@@ -123,7 +126,7 @@ where
 
 impl<T, const N: usize> Neg for AutoFloat<T, N>
 where
-    T: Neg<Output = T> + Clone,
+    T: Neg<Output = T> + Copy + Default,
 {
     type Output = Self;
 

@@ -2,11 +2,11 @@ use std::ops::{Div, DivAssign, Mul, Sub, SubAssign};
 
 use num_traits::One;
 
-use super::{binary_op, unary_op, AutoFloat};
+use crate::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> Div<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Div<Output = T> + Mul<Output = T> + Sub<Output = T> + One + Clone,
+    T: Div<Output = T> + Mul<Output = T> + Sub<Output = T> + One + Copy + Default,
 {
     type Output = Self;
 
@@ -23,14 +23,14 @@ where
 
 impl<T, const N: usize> Div<T> for AutoFloat<T, N>
 where
-    T: Div<Output = T> + Clone,
+    T: Div<Output = T> + Copy + Default,
 {
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
         AutoFloat {
-            x: self.x / rhs.clone(),
-            dx: unary_op(self.dx, |v| v / rhs.clone()),
+            x: self.x / rhs,
+            dx: unary_op(self.dx, |v| v / rhs),
         }
     }
 }

@@ -1,10 +1,10 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 
-use super::{binary_op, unary_op, AutoFloat};
+use crate::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> Mul<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Mul<Output = T> + Add<Output = T> + Clone,
+    T: Mul<Output = T> + Add<Output = T> + Copy + Default,
 {
     type Output = Self;
 
@@ -42,14 +42,14 @@ impl<const N: usize> Mul<AutoFloat<f32, N>> for f32 {
 
 impl<T, const N: usize> Mul<T> for AutoFloat<T, N>
 where
-    T: Mul<Output = T> + Clone,
+    T: Mul<Output = T> + Copy + Default,
 {
     type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
         AutoFloat {
-            x: self.x * rhs.clone(),
-            dx: unary_op(self.dx, |v| v * rhs.clone()),
+            x: self.x * rhs,
+            dx: unary_op(self.dx, |v| v * rhs),
         }
     }
 }
