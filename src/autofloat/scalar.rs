@@ -18,9 +18,6 @@ pub type AutoFloat3<T> = AutoFloat<T, 3>;
 pub type AutoFloat4<T> = AutoFloat<T, 4>;
 pub type AutoFloat5<T> = AutoFloat<T, 5>;
 pub type AutoFloat6<T> = AutoFloat<T, 6>;
-pub type AutoFloat7<T> = AutoFloat<T, 7>;
-pub type AutoFloat8<T> = AutoFloat<T, 8>;
-pub type AutoFloat9<T> = AutoFloat<T, 9>;
 
 impl<T, const N: usize> AutoFloat<T, N> {
     /// Creates an `AutoFloat` with the given value and gradients.

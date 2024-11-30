@@ -4,6 +4,7 @@ use num_traits::{float::FloatCore, FloatConst, Zero};
 
 use crate::unary_op;
 
+use super::float_impl::*;
 use super::AutoFloat;
 
 impl<T, const N: usize> FloatConst for AutoFloat<T, N>
@@ -116,17 +117,11 @@ where
     }
 
     fn to_degrees(self) -> Self {
-        AutoFloat {
-            x: FloatCore::to_degrees(self.x),
-            dx: unary_op(self.dx, FloatCore::to_degrees),
-        }
+        to_degrees_impl!(self)
     }
 
     fn to_radians(self) -> Self {
-        AutoFloat {
-            x: FloatCore::to_radians(self.x),
-            dx: unary_op(self.dx, FloatCore::to_radians),
-        }
+        to_radians_impl!(self)
     }
 
     fn integer_decode(self) -> (u64, i16, i8) {
@@ -134,19 +129,11 @@ where
     }
 
     fn max(self, other: AutoFloat<T, N>) -> Self {
-        if self.x < other.x {
-            other
-        } else {
-            self
-        }
+        max_impl!(self, other)
     }
 
     fn min(self, other: AutoFloat<T, N>) -> Self {
-        if self.x > other.x {
-            other
-        } else {
-            self
-        }
+        min_impl!(self, other)
     }
 }
 

@@ -22,6 +22,7 @@ simba = { version = "0.9", optional = true }
 rand = "0.8"
 
 [features]
-std = []
+float_impl = []                                              # enables the float impl macros
+std = ["float_impl", "num-traits/std"]
 default = ["std"]
-nalgebra = ["dep:nalgebra", "approx", "simba"]
+nalgebra = ["dep:nalgebra", "float_impl", "approx", "simba"]

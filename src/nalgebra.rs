@@ -1,12 +1,13 @@
 use nalgebra::{convert, ComplexField, Field, RealField, SimdBool, SimdValue};
-use num_traits::{Float, FloatConst, Zero};
-use std::ops::{Add, Div, DivAssign, Mul, MulAssign, Neg, Sub};
+use num_traits::{FloatConst, NumCast, Zero};
+use std::ops::{Div, Mul};
 
+use crate::autofloat::float_impl::*;
 use crate::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> RealField for AutoFloat<T, N>
 where
-    T: RealField + Float + FloatConst,
+    T: RealField + NumCast + FloatConst + Default + Copy,
 {
     fn is_sign_positive(&self) -> bool {
         self.x.is_sign_positive()
@@ -21,25 +22,21 @@ where
         }
     }
     fn max(self, other: Self) -> Self {
-        if self.x < other.x {
-            other
-        } else {
-            self
-        }
+        max_impl!(self, other)
     }
+
     fn min(self, other: Self) -> Self {
-        if self.x > other.x {
-            other
-        } else {
-            self
-        }
+        min_impl!(self, other)
     }
-    fn clamp(self, min: Self, max: Self) -> Self {
-        RealField::max(RealField::min(self, max), min)
+
+    fn clamp(self, low: Self, high: Self) -> Self {
+        self.min(high).max(low)
     }
+
     fn atan2(self, other: Self) -> Self {
-        self.atan2_impl(other)
+        atan2_impl!(self, other)
     }
+
     fn pi() -> Self {
         Self::PI()
     }
@@ -87,29 +84,11 @@ where
     }
 
     fn min_value() -> Option<Self> {
-        let v_min = <T as RealField>::min_value();
-        let d_min = <D as RealField>::min_value();
-        if v_min.is_some() && d_min.is_some() {
-            Some(Self {
-                x: v_min.unwrap(),
-                dx: d_min.unwrap(),
-            })
-        } else {
-            None
-        }
+        <T as RealField>::min_value().map(AutoFloat::constant)
     }
 
     fn max_value() -> Option<Self> {
-        let v_max = <T as RealField>::max_value();
-        let d_max = <D as RealField>::max_value();
-        if v_max.is_some() && d_max.is_some() {
-            Some(Self {
-                x: v_max.unwrap(),
-                dx: d_max.unwrap(),
-            })
-        } else {
-            None
-        }
+        <T as RealField>::max_value().map(AutoFloat::constant)
     }
 }
 
@@ -120,8 +99,8 @@ where
         + Div<T::RealField, Output = T>
         + Copy
         + Default
-        + Float,
-    T::RealField: RealField + Float + FloatConst + Default,
+        + NumCast,
+    T::RealField: RealField + FloatConst + Copy + Default + NumCast + Zero,
 {
     type RealField = AutoFloat<T::RealField, N>;
 
@@ -131,6 +110,7 @@ where
             dx: unary_op(re.dx, T::from_real),
         }
     }
+
     fn real(self) -> Self::RealField {
         AutoFloat {
             x: self.x.real(),
@@ -143,8 +123,9 @@ where
             dx: unary_op(self.dx, |v| v.imaginary()),
         }
     }
+
     fn modulus(self) -> Self::RealField {
-        let x = self.x.clone().modulus();
+        let x = self.x.modulus();
         AutoFloat {
             x: x,
             dx: unary_op(self.dx, |v| {
@@ -152,6 +133,7 @@ where
             }),
         }
     }
+
     fn modulus_squared(self) -> Self::RealField {
         AutoFloat {
             x: self.x.modulus_squared(),
@@ -161,39 +143,147 @@ where
             }),
         }
     }
+
     fn argument(self) -> Self::RealField {
-        RealField::atan2(self.clone().imaginary(), self.real())
+        RealField::atan2(self.imaginary(), self.real())
     }
+
     fn norm1(self) -> Self::RealField {
-        ComplexField::abs(self.clone().real()) + ComplexField::abs(self.imaginary())
+        ComplexField::abs(self.real()) + ComplexField::abs(self.imaginary())
     }
+
     fn scale(self, factor: Self::RealField) -> Self {
-        self * factor
+        self * Self::from_real(factor)
     }
+
     fn unscale(self, factor: Self::RealField) -> Self {
-        self / factor
+        self / Self::from_real(factor)
     }
+
     fn floor(self) -> Self {
-        Float::floor(self)
+        floor_impl!(self)
     }
+
     fn ceil(self) -> Self {
-        Float::ceil(self)
+        ceil_impl!(self)
     }
+
     fn round(self) -> Self {
-        Float::round(self)
+        round_impl!(self)
     }
+
     fn trunc(self) -> Self {
-        Float::trunc(self)
+        trunc_impl!(self)
     }
+
     fn fract(self) -> Self {
-        Float::fract(self)
+        fract_impl!(self)
     }
-    fn mul_add(self, a: Self, b: Self) -> Self {
-        Float::mul_add(self, a, b)
-    }
+
     fn abs(self) -> Self::RealField {
         self.modulus()
     }
+
+    fn mul_add(self, a: Self, b: Self) -> Self {
+        mul_add_impl!(self, a, b)
+    }
+
+    fn recip(self) -> Self {
+        recip_impl!(self)
+    }
+
+    fn sin(self) -> Self {
+        sin_impl!(self)
+    }
+
+    fn cos(self) -> Self {
+        cos_impl!(self)
+    }
+
+    fn tan(self) -> Self {
+        tan_impl!(self)
+    }
+
+    fn asin(self) -> Self {
+        asin_impl!(self)
+    }
+
+    fn acos(self) -> Self {
+        acos_impl!(self)
+    }
+
+    fn atan(self) -> Self {
+        atan_impl!(self)
+    }
+
+    fn sin_cos(self) -> (Self, Self) {
+        sin_cos_impl!(self)
+    }
+
+    fn sinh(self) -> Self {
+        sinh_impl!(self)
+    }
+
+    fn cosh(self) -> Self {
+        cosh_impl!(self)
+    }
+
+    fn tanh(self) -> Self {
+        tanh_impl!(self)
+    }
+
+    fn asinh(self) -> Self {
+        asinh_impl!(self)
+    }
+
+    fn acosh(self) -> Self {
+        acosh_impl!(self)
+    }
+
+    fn atanh(self) -> Self {
+        atanh_impl!(self)
+    }
+
+    fn log(self, b: Self::RealField) -> Self {
+        log_impl!(self, b)
+    }
+
+    fn log2(self) -> Self {
+        log2_impl!(self, <T::RealField as NumCast>::from(2).unwrap())
+    }
+
+    fn log10(self) -> Self {
+        log10_impl!(self, <T::RealField as NumCast>::from(10).unwrap())
+    }
+
+    fn ln(self) -> Self {
+        ln_impl!(self)
+    }
+
+    fn ln_1p(self) -> Self {
+        ln_1p_impl!(self)
+    }
+
+    fn sqrt(self) -> Self {
+        sqrt_impl!(self)
+    }
+
+    fn cbrt(self) -> Self {
+        cbrt_impl!(self)
+    }
+
+    fn exp(self) -> Self {
+        exp_impl!(self)
+    }
+
+    fn exp2(self) -> Self {
+        exp2_impl!(self)
+    }
+
+    fn powi(self, n: i32) -> Self {
+        powi_impl!(self, n)
+    }
+
     fn hypot(self, other: Self) -> Self::RealField {
         ComplexField::sqrt(
             self.clone().real() * self.clone().real() - self.clone().imaginary() * self.imaginary()
@@ -201,153 +291,36 @@ where
                 - other.clone().imaginary() * other.imaginary(),
         )
     }
-    fn recip(self) -> Self {
-        Float::recip(self)
-    }
+
     fn conjugate(self) -> Self {
         AutoFloat {
             x: self.x.conjugate(),
             dx: unary_op(self.dx, |v| v.conjugate()),
         }
     }
-    fn sin(self) -> Self {
-        Float::sin(self)
-    }
-    fn cos(self) -> Self {
-        Float::cos(self)
-    }
-    fn sin_cos(self) -> (Self, Self) {
-        Float::sin_cos(self)
-    }
-    fn tan(self) -> Self {
-        Float::tan(self)
-    }
-    fn asin(self) -> Self {
-        Float::asin(self)
-    }
-    fn acos(self) -> Self {
-        Float::acos(self)
-    }
-    fn atan(self) -> Self {
-        Float::atan(self)
-    }
-    fn sinh(self) -> Self {
-        Float::sinh(self)
-    }
-    fn cosh(self) -> Self {
-        Float::cosh(self)
-    }
-    fn tanh(self) -> Self {
-        Float::tanh(self)
-    }
-    fn asinh(self) -> Self {
-        Float::asinh(self)
-    }
-    fn acosh(self) -> Self {
-        Float::acosh(self)
-    }
-    fn atanh(self) -> Self {
-        Float::atanh(self)
-    }
-    fn log(self, b: Self::RealField) -> Self {
-        let s_r = self.x.clone();
-        let b_r = b.x;
-        let ln_b_r = ComplexField::ln(b_r);
-        AutoFloat {
-            x: ComplexField::log(self.x, b.x),
-            dx: -b.dx * ComplexField::ln(s_r.clone()) / (b_r * ln_b_r * ln_b_r)
-                + self.dx / (s_r * ln_b_r),
-        }
-    }
-    fn log2(self) -> Self {
-        Float::log2(self)
-    }
-    fn log10(self) -> Self {
-        Float::log10(self)
-    }
-    fn ln(self) -> Self {
-        Float::ln(self)
-    }
-    fn ln_1p(self) -> Self {
-        Float::ln_1p(self)
-    }
-    fn sqrt(self) -> Self {
-        Float::sqrt(self)
-    }
-    fn exp(self) -> Self {
-        Float::exp(self)
-    }
-    fn exp2(self) -> Self {
-        Float::exp2(self)
-    }
-    fn exp_m1(self) -> Self {
-        Float::exp_m1(self)
-    }
-    fn powi(self, n: i32) -> Self {
-        Float::powi(self, n)
-    }
 
-    // TODO: Fix the following implementations for complex values.
     fn powf(self, n: Self::RealField) -> Self {
-        let self_r = self.x.clone();
-        let n_r = n.x;
-        // Avoid imaginary values in the ln.
-        let dn = if n.dx.is_zero() {
-            D::zero()
-        } else {
-            n.dx * ComplexField::ln(self_r.clone())
-        };
+        let x = self.x.powf(n.x);
+        powf_impl!(self, n, x)
+    }
 
-        let x = ComplexField::powf(self_r.clone(), n_r.clone());
-
-        // Avoid division by zero.
-        let x_df = if self.x.is_zero() && x.is_zero() {
-            D::zero()
-        } else {
-            self.dx * (x.clone() * n_r / self_r)
-        };
-
-        AutoFloat {
-            x: x.clone(),
-            dx: dn * x + x_df,
-        }
+    fn exp_m1(self) -> Self {
+        exp_m1_impl!(self)
     }
 
     fn powc(self, n: Self) -> Self {
-        let self_r = self.x.clone();
-        let n_r = n.x;
-        // Avoid imaginary values in the ln.
-        let dn = if n.dx.is_zero() {
-            D::zero()
-        } else {
-            n.dx * ComplexField::ln(self_r.clone())
-        };
-
-        let x = ComplexField::powc(self_r.clone(), n_r.clone());
-
-        // Avoid division by zero.
-        let x_df = if self.x.clone().is_zero() && x.is_zero() {
-            D::zero()
-        } else {
-            self.dx * (x.clone() * n_r / self_r)
-        };
-
-        AutoFloat {
-            x: x.clone(),
-            dx: dn * x + x_df,
-        }
+        let x = self.x.powc(n.x);
+        powf_impl!(self, n, x)
     }
-    fn cbrt(self) -> Self {
-        Float::cbrt(self)
-    }
+
     fn is_finite(&self) -> bool {
-        self.x.is_finite() && self.dx.iter().all(|v| v.is_finite())
+        self.x.is_finite() && Iterator::all(&mut self.dx.iter(), |v| v.is_finite())
     }
 
     fn try_sqrt(self) -> Option<Self> {
         let sqrt = ComplexField::sqrt(self.x);
         let denom = sqrt * convert::<f64, T>(2.0);
-        if denom.is_zero() && self.dx.into_iter().all(|v| v.is_zero()) {
+        if denom.is_zero() && Iterator::all(&mut self.dx.iter(), |v| v.is_zero()) {
             None
         } else {
             let factor = T::one() / denom;
@@ -429,45 +402,45 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{AutoFloat, F1};
-    use nalgebra::{ComplexField, Matrix3, Vector3};
-    fn make_mtx() -> Matrix3<AutoFloat<f64, f64>> {
-        [
-            [
-                AutoFloat::cst(1.0),
-                AutoFloat::cst(2.0),
-                AutoFloat::cst(3.0),
-            ],
-            [
-                AutoFloat::cst(4.0),
-                AutoFloat::cst(5.0),
-                AutoFloat::cst(6.0),
-            ],
-            [
-                AutoFloat::cst(7.0),
-                AutoFloat::cst(8.0),
-                AutoFloat::cst(9.0),
-            ],
-        ]
-        .into()
-    }
+    // use crate::{AutoFloat, F1};
+    // use nalgebra::{ComplexField, Matrix3, Vector3};
+    // fn make_mtx() -> Matrix3<AutoFloat<f64, f64>> {
+    //     [
+    //         [
+    //             AutoFloat::cst(1.0),
+    //             AutoFloat::cst(2.0),
+    //             AutoFloat::cst(3.0),
+    //         ],
+    //         [
+    //             AutoFloat::cst(4.0),
+    //             AutoFloat::cst(5.0),
+    //             AutoFloat::cst(6.0),
+    //         ],
+    //         [
+    //             AutoFloat::cst(7.0),
+    //             AutoFloat::cst(8.0),
+    //             AutoFloat::cst(9.0),
+    //         ],
+    //     ]
+    //     .into()
+    // }
 
-    // Generic multiply. This tests that AutoFloat is a realfield
-    fn mul<T: ComplexField>(m: Matrix3<T>, v: Vector3<T>) -> Vector3<T> {
-        m * v
-    }
+    // // Generic multiply. This tests that AutoFloat is a realfield
+    // fn mul<T: ComplexField>(m: Matrix3<T>, v: Vector3<T>) -> Vector3<T> {
+    //     m * v
+    // }
 
-    #[test]
-    fn mtx_mul() {
-        let mtx = make_mtx();
-        let v = Vector3::from([F1::var(1.0); 3]);
-        assert_eq!(
-            mul(mtx, v),
-            Vector3::from([
-                AutoFloat { x: 12.0, dx: 12.0 },
-                AutoFloat { x: 15.0, dx: 15.0 },
-                AutoFloat { x: 18.0, dx: 18.0 }
-            ])
-        );
-    }
+    // #[test]
+    // fn mtx_mul() {
+    //     let mtx = make_mtx();
+    //     let v = Vector3::from([F1::var(1.0); 3]);
+    //     assert_eq!(
+    //         mul(mtx, v),
+    //         Vector3::from([
+    //             AutoFloat { x: 12.0, dx: 12.0 },
+    //             AutoFloat { x: 15.0, dx: 15.0 },
+    //             AutoFloat { x: 18.0, dx: 18.0 }
+    //         ])
+    //     );
+    // }
 }

@@ -2,6 +2,7 @@ use std::num::FpCategory;
 
 use num_traits::{Float, Zero};
 
+use super::float_impl::*;
 use crate::{binary_op, unary_op, AutoFloat};
 
 impl<T, const N: usize> Float for AutoFloat<T, N>
@@ -57,46 +58,140 @@ where
     }
 
     fn floor(self) -> Self {
-        AutoFloat {
-            x: self.x.floor(),
-            dx: self.dx,
-        }
+        floor_impl!(self)
     }
 
     fn ceil(self) -> Self {
-        AutoFloat {
-            x: self.x.ceil(),
-            dx: self.dx,
-        }
+        ceil_impl!(self)
     }
 
     fn round(self) -> Self {
-        AutoFloat {
-            x: self.x.round(),
-            dx: self.dx,
-        }
+        round_impl!(self)
     }
 
     fn trunc(self) -> Self {
-        AutoFloat {
-            x: self.x.trunc(),
-            dx: self.dx,
-        }
+        trunc_impl!(self)
     }
 
     fn fract(self) -> Self {
-        AutoFloat {
-            x: self.x.fract(),
-            dx: self.dx,
-        }
+        fract_impl!(self)
     }
 
     fn abs(self) -> Self {
-        if self.x >= T::zero() {
-            self
-        } else {
-            -self
-        }
+        abs_impl!(self)
+    }
+
+    fn mul_add(self, a: AutoFloat<T, N>, b: AutoFloat<T, N>) -> Self {
+        mul_add_impl!(self, a, b)
+    }
+
+    fn recip(self) -> Self {
+        recip_impl!(self)
+    }
+
+    fn sin(self) -> Self {
+        sin_impl!(self)
+    }
+
+    fn cos(self) -> Self {
+        cos_impl!(self)
+    }
+
+    fn tan(self) -> Self {
+        tan_impl!(self)
+    }
+
+    fn asin(self) -> Self {
+        asin_impl!(self)
+    }
+
+    fn acos(self) -> Self {
+        acos_impl!(self)
+    }
+
+    fn atan(self) -> Self {
+        atan_impl!(self)
+    }
+
+    fn atan2(self, other: Self) -> Self {
+        atan2_impl!(self, other)
+    }
+
+    fn sin_cos(self) -> (Self, Self) {
+        sin_cos_impl!(self)
+    }
+
+    fn sinh(self) -> Self {
+        sinh_impl!(self)
+    }
+
+    fn cosh(self) -> Self {
+        cosh_impl!(self)
+    }
+
+    fn tanh(self) -> Self {
+        tanh_impl!(self)
+    }
+
+    fn asinh(self) -> Self {
+        asinh_impl!(self)
+    }
+
+    fn acosh(self) -> Self {
+        acosh_impl!(self)
+    }
+
+    fn atanh(self) -> Self {
+        atanh_impl!(self)
+    }
+
+    fn log(self, b: Self) -> Self {
+        log_impl!(self, b)
+    }
+
+    fn log2(self) -> Self {
+        log2_impl!(self, T::from(2).unwrap())
+    }
+
+    fn log10(self) -> Self {
+        log10_impl!(self, T::from(10).unwrap())
+    }
+
+    fn ln(self) -> Self {
+        ln_impl!(self)
+    }
+
+    fn ln_1p(self) -> Self {
+        ln_1p_impl!(self)
+    }
+
+    fn sqrt(self) -> Self {
+        sqrt_impl!(self)
+    }
+
+    fn cbrt(self) -> Self {
+        cbrt_impl!(self)
+    }
+
+    fn exp(self) -> Self {
+        exp_impl!(self)
+    }
+
+    fn exp2(self) -> Self {
+        exp2_impl!(self)
+    }
+
+    fn exp_m1(self) -> Self {
+        exp_m1_impl!(self)
+    }
+
+    fn powi(self, n: i32) -> Self {
+        powi_impl!(self, n)
+    }
+
+    fn powf(self, n: AutoFloat<T, N>) -> Self {
+        let x = self.x.powf(n.x);
+        powf_impl!(self, n, x)
     }
 
     fn signum(self) -> Self {
@@ -111,130 +206,12 @@ where
         self.x.is_sign_negative()
     }
 
-    fn mul_add(self, a: AutoFloat<T, N>, b: AutoFloat<T, N>) -> Self {
-        AutoFloat {
-            x: self.x.mul_add(a.x, b.x),
-            dx: binary_op(
-                binary_op(self.dx, a.dx, |l, r| l * a.x + r * self.x),
-                b.dx,
-                |l, r| l + r,
-            ),
-        }
-    }
-
-    fn recip(self) -> Self {
-        let factor = -T::one() / self.x * self.x;
-        AutoFloat {
-            x: self.x.recip(),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn powi(self, n: i32) -> Self {
-        let factor = self.x.powi(n - 1) * T::from(n).unwrap();
-        AutoFloat {
-            x: self.x.powi(n),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn powf(self, n: AutoFloat<T, N>) -> Self {
-        let x = Float::powf(self.x, n.x);
-
-        // Avoid division by zero.
-        let x_df_factor = if self.x.is_zero() && x.is_zero() {
-            T::zero()
-        } else {
-            x * n.x / self.x
-        };
-
-        AutoFloat {
-            x,
-            dx: unary_op(n.dx, |v| {
-                // Avoid imaginary values in the ln
-                let dn = if v.is_zero() {
-                    T::zero()
-                } else {
-                    v * Float::ln(self.x)
-                };
-
-                dn * x + v * x_df_factor
-            }),
-        }
-    }
-
-    fn sqrt(self) -> Self {
-        let denom = self.x.sqrt() * T::from(2.0).unwrap();
-        let factor = if denom.is_zero() {
-            T::zero()
-        } else {
-            T::one() / denom
-        };
-
-        AutoFloat {
-            x: self.x.sqrt(),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn exp(self) -> Self {
-        let exp = Float::exp(self.x);
-        AutoFloat {
-            x: exp,
-            dx: unary_op(self.dx, |v| v * exp),
-        }
-    }
-
-    fn exp2(self) -> Self {
-        let exp2 = Float::exp2(self.x);
-        let factor = T::from(2.0).unwrap().ln() * exp2;
-        AutoFloat {
-            x: exp2,
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn ln(self) -> Self {
-        let factor = self.x.recip();
-        AutoFloat {
-            x: Float::ln(self.x),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn log(self, b: AutoFloat<T, N>) -> Self {
-        let ln_bx = Float::ln(b.x);
-        let factor_bdx = -Float::ln(self.x) / (b.x * ln_bx * ln_bx);
-        let factor_sdx = T::one() / self.x * ln_bx;
-
-        AutoFloat {
-            x: Float::log(self.x, b.x),
-            dx: binary_op(self.dx, b.dx, |l, r| r * factor_bdx + l * factor_sdx),
-        }
-    }
-
-    fn log2(self) -> Self {
-        Float::log(self, AutoFloat::constant(T::from(2.0).unwrap()))
-    }
-
-    fn log10(self) -> Self {
-        Float::log(self, AutoFloat::constant(T::from(10.0).unwrap()))
-    }
-
     fn max(self, other: AutoFloat<T, N>) -> Self {
-        if self.x < other.x {
-            other
-        } else {
-            self
-        }
+        max_impl!(self, other)
     }
 
     fn min(self, other: AutoFloat<T, N>) -> Self {
-        if self.x > other.x {
-            other
-        } else {
-            self
-        }
+        min_impl!(self, other)
     }
 
     fn abs_sub(self, other: AutoFloat<T, N>) -> Self {
@@ -248,161 +225,8 @@ where
         }
     }
 
-    fn cbrt(self) -> Self {
-        let x_cbrt = Float::cbrt(self.x);
-        let denom = x_cbrt * x_cbrt * T::from(3.0).unwrap();
-        let factor = if denom.is_zero() {
-            T::zero()
-        } else {
-            T::one() / denom
-        };
-
-        AutoFloat {
-            x: x_cbrt,
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
     fn hypot(self, other: AutoFloat<T, N>) -> Self {
         Float::sqrt(self.clone() * self + other.clone() * other)
-    }
-
-    fn sin(self) -> Self {
-        let cos_x = Float::cos(self.x);
-        AutoFloat {
-            x: Float::sin(self.x),
-            dx: unary_op(self.dx, |v| v * cos_x),
-        }
-    }
-
-    fn cos(self) -> Self {
-        let sin_x = -Float::sin(self.x);
-        AutoFloat {
-            x: Float::cos(self.x),
-            dx: unary_op(self.dx, |v| v * sin_x),
-        }
-    }
-
-    fn tan(self) -> Self {
-        let tan_x = Float::tan(self.x);
-        let factor = tan_x * tan_x + T::one();
-        AutoFloat {
-            x: tan_x,
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn asin(self) -> Self {
-        let factor = T::one() / (T::one() - self.x.clone() * self.x).sqrt();
-        AutoFloat {
-            x: Float::asin(self.x.clone()),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn acos(self) -> Self {
-        let factor = -T::one() / (T::one() - self.x * self.x).sqrt();
-        AutoFloat {
-            x: Float::acos(self.x),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn atan(self) -> Self {
-        let factor = T::one() / (self.x * self.x + T::one());
-        AutoFloat {
-            x: Float::atan(self.x),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn atan2(self, other: AutoFloat<T, N>) -> Self {
-        let factor = T::one() / (self.x * self.x + other.x * other.x);
-        AutoFloat {
-            x: Float::atan2(self.x, other.x),
-            dx: binary_op(self.dx, other.dx, |l, r| {
-                (l * other.x - r * self.x) * factor
-            }),
-        }
-    }
-
-    fn sin_cos(self) -> (AutoFloat<T, N>, AutoFloat<T, N>) {
-        let (s, c) = Float::sin_cos(self.x);
-        let sn = AutoFloat {
-            x: s,
-            dx: unary_op(self.dx, |v| v * c),
-        };
-        let s_neg = -s;
-        let cn = AutoFloat {
-            x: c,
-            dx: unary_op(self.dx, |v| v * s_neg),
-        };
-        (sn, cn)
-    }
-
-    fn exp_m1(self) -> Self {
-        let exp_x = Float::exp(self.x);
-        AutoFloat {
-            x: Float::exp_m1(self.x),
-            dx: unary_op(self.dx, |v| v * exp_x),
-        }
-    }
-
-    fn ln_1p(self) -> Self {
-        let factor = T::one() / (self.x + T::one());
-        AutoFloat {
-            x: Float::ln_1p(self.x),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn sinh(self) -> Self {
-        let cosh_x = Float::cosh(self.x);
-        AutoFloat {
-            x: Float::sinh(self.x),
-            dx: unary_op(self.dx, |v| v * cosh_x),
-        }
-    }
-
-    fn cosh(self) -> Self {
-        let sinh_x = Float::sinh(self.x);
-        AutoFloat {
-            x: Float::cosh(self.x),
-            dx: unary_op(self.dx, |v| v * sinh_x),
-        }
-    }
-
-    fn tanh(self) -> Self {
-        let tanhx = Float::tanh(self.x);
-        let factor = T::one() - tanhx * tanhx;
-        AutoFloat {
-            x: tanhx,
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn asinh(self) -> Self {
-        let factor = T::one() / (self.x * self.x + T::one()).sqrt();
-        AutoFloat {
-            x: Float::asinh(self.x),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn acosh(self) -> Self {
-        let factor = T::one() / (self.x * self.x - T::one()).sqrt();
-        AutoFloat {
-            x: Float::acosh(self.x),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
-    }
-
-    fn atanh(self) -> Self {
-        let factor = T::one() / (-self.x * self.x + T::one());
-        AutoFloat {
-            x: Float::atanh(self.x),
-            dx: unary_op(self.dx, |v| v * factor),
-        }
     }
 
     fn integer_decode(self) -> (u64, i16, i8) {
@@ -414,17 +238,11 @@ where
     }
 
     fn to_degrees(self) -> Self {
-        AutoFloat {
-            x: Float::to_degrees(self.x),
-            dx: unary_op(self.dx, Float::to_degrees),
-        }
+        to_degrees_impl!(self)
     }
 
     fn to_radians(self) -> Self {
-        AutoFloat {
-            x: Float::to_radians(self.x),
-            dx: unary_op(self.dx, Float::to_radians),
-        }
+        to_radians_impl!(self)
     }
 }
 

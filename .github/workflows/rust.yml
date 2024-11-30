@@ -61,14 +61,14 @@ jobs:
             name: default
           - value: --no-default-features
             name: no features
-          # - value: --all-features
-          #   name: all features
+          - value: --all-features
+            name: all features
           - value: --features approx
             name: approx
           - value: --features simba
             name: simba
-          # - value: --features nalgebra
-          #   name: nalgebra
+          - value: --features nalgebra
+            name: nalgebra
     name: "Build & Test / ${{matrix.os.name}} / ${{matrix.feature.name}}"
     env:
       RUSTFLAGS: "--deny warnings"

@@ -69,7 +69,10 @@
 /// ```
 mod autofloat;
 
-pub use autofloat::*;
+pub use autofloat::{
+    AutoFloat, AutoFloat1, AutoFloat2, AutoFloat3, AutoFloat4, AutoFloat5, AutoFloat6,
+};
+
 #[cfg(feature = "approx")]
 mod approx;
 #[cfg(feature = "nalgebra")]

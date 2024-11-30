@@ -1,6 +1,7 @@
 mod add;
 mod div;
 mod float_core;
+pub mod float_impl;
 mod mul;
 mod num;
 mod rem;
