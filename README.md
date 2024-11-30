@@ -35,9 +35,11 @@ where
 }
 
 fn main() {
-    // Use AutoFloat2 because we use a 2-dimensional function and we want a 2-dimensional gradient.
+    // Use AutoFloat2 because we use a 2-dimensional function and
+    // we want a 2-dimensional gradient.
     // The first parameter determines the value of the variable.
-    // The second prameter determines the index of the derivative for this variable within the gradient vector.
+    // The second prameter determines the index of the derivative
+    // for this variable within the gradient vector.
     let x = AutoFloat2::variable(2.25, 0);
     let y = AutoFloat2::variable(-1.75, 1);
 
