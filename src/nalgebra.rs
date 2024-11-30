@@ -349,7 +349,6 @@ where
 
     const LANES: usize = T::LANES;
 
-    #[inline(always)]
     fn splat(val: Self::Element) -> Self {
         AutoFloat {
             x: T::splat(val.x),
@@ -357,7 +356,6 @@ where
         }
     }
 
-    #[inline(always)]
     fn extract(&self, i: usize) -> Self::Element {
         AutoFloat {
             x: self.x.extract(i),
@@ -365,7 +363,6 @@ where
         }
     }
 
-    #[inline(always)]
     unsafe fn extract_unchecked(&self, i: usize) -> Self::Element {
         AutoFloat {
             x: self.x.extract_unchecked(i),
@@ -382,7 +379,6 @@ where
             .for_each(|(l, r)| l.replace(i, r));
     }
 
-    #[inline(always)]
     unsafe fn replace_unchecked(&mut self, i: usize, val: Self::Element) {
         self.x.replace_unchecked(i, val.x);
         self.dx
@@ -391,7 +387,6 @@ where
             .for_each(|(l, r)| l.replace_unchecked(i, r));
     }
 
-    #[inline(always)]
     fn select(self, cond: Self::SimdBool, other: Self) -> Self {
         AutoFloat {
             x: self.x.select(cond, other.x),
@@ -402,45 +397,50 @@ where
 
 #[cfg(test)]
 mod tests {
-    // use crate::{AutoFloat, F1};
-    // use nalgebra::{ComplexField, Matrix3, Vector3};
-    // fn make_mtx() -> Matrix3<AutoFloat<f64, f64>> {
-    //     [
-    //         [
-    //             AutoFloat::cst(1.0),
-    //             AutoFloat::cst(2.0),
-    //             AutoFloat::cst(3.0),
-    //         ],
-    //         [
-    //             AutoFloat::cst(4.0),
-    //             AutoFloat::cst(5.0),
-    //             AutoFloat::cst(6.0),
-    //         ],
-    //         [
-    //             AutoFloat::cst(7.0),
-    //             AutoFloat::cst(8.0),
-    //             AutoFloat::cst(9.0),
-    //         ],
-    //     ]
-    //     .into()
-    // }
+    use crate::{test::assert_autofloat_eq, AutoFloat};
+    use nalgebra::{ComplexField, Matrix3, Vector3};
+    fn make_matrix() -> Matrix3<AutoFloat<f64, 3>> {
+        [
+            [
+                AutoFloat::constant(1.0),
+                AutoFloat::constant(2.0),
+                AutoFloat::constant(3.0),
+            ],
+            [
+                AutoFloat::constant(4.0),
+                AutoFloat::constant(5.0),
+                AutoFloat::constant(6.0),
+            ],
+            [
+                AutoFloat::constant(7.0),
+                AutoFloat::constant(8.0),
+                AutoFloat::constant(9.0),
+            ],
+        ]
+        .into()
+    }
 
-    // // Generic multiply. This tests that AutoFloat is a realfield
-    // fn mul<T: ComplexField>(m: Matrix3<T>, v: Vector3<T>) -> Vector3<T> {
-    //     m * v
-    // }
+    // Generic multiply. This tests that AutoFloat is a realfield
+    fn mul<T: ComplexField>(m: Matrix3<T>, v: Vector3<T>) -> Vector3<T> {
+        m * v
+    }
 
-    // #[test]
-    // fn mtx_mul() {
-    //     let mtx = make_mtx();
-    //     let v = Vector3::from([F1::var(1.0); 3]);
-    //     assert_eq!(
-    //         mul(mtx, v),
-    //         Vector3::from([
-    //             AutoFloat { x: 12.0, dx: 12.0 },
-    //             AutoFloat { x: 15.0, dx: 15.0 },
-    //             AutoFloat { x: 18.0, dx: 18.0 }
-    //         ])
-    //     );
-    // }
+    #[test]
+    fn matrix_mul() {
+        let matrix = make_matrix();
+        let vector = Vector3::from(std::array::from_fn(|i| {
+            AutoFloat::variable((i + 2) as f64, i)
+        }));
+        let actual = mul(matrix, vector);
+
+        let expected = Vector3::from([
+            AutoFloat::new(42.0, [1.0, 4.0, 7.0]),
+            AutoFloat::new(51.0, [2.0, 5.0, 8.0]),
+            AutoFloat::new(60.0, [3.0, 6.0, 9.0]),
+        ]);
+
+        for (a, e) in actual.iter().zip(expected.iter()) {
+            assert_autofloat_eq!(e, a);
+        }
+    }
 }
