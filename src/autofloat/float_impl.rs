@@ -41,7 +41,7 @@ macro_rules! min_impl {
 pub(crate) use min_impl;
 
 #[cfg(feature = "float_impl")]
-mod dependent {
+mod float_impl {
     macro_rules! floor_impl {
         ($lhs:expr) => {
             AutoFloat::constant($lhs.x.floor())
@@ -436,4 +436,4 @@ mod dependent {
 }
 
 #[cfg(feature = "float_impl")]
-pub(crate) use dependent::*;
+pub(crate) use float_impl::*;

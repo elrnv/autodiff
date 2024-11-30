@@ -82,38 +82,6 @@ mod simba;
 
 #[cfg(test)]
 mod test {
-    use core::f64;
-
-    macro_rules! assert_near {
-        ($lhs:expr, $rhs:expr, $eps:expr) => {{
-            let lhs = &$lhs;
-            let rhs = &$rhs;
-            let eps = $eps;
-            let diff = (*lhs - *rhs).abs();
-            assert!(
-                diff < eps,
-                "assertion `(left ~= right) failed` \n\
-                 left: {:?} \n\
-                 right: {:?} \n\
-                 difference {:?} is greater than epsilon {:?}",
-                *lhs,
-                *rhs,
-                diff,
-                eps
-            );
-        }};
-    }
-    pub(crate) use assert_near;
-
-    macro_rules! assert_autofloat_near {
-        ($lhs:expr, $rhs:expr, $eps:expr) => {{
-            assert_near!($lhs.x, $rhs.x, $eps);
-            for (&l, &r) in $lhs.dx.iter().zip($rhs.dx.iter()) {
-                assert_near!(l, r, $eps);
-            }
-        }};
-    }
-    pub(crate) use assert_autofloat_near;
 
     /// Convenience macro for comparing `AutoFloats`s in full.
     macro_rules! assert_autofloat_eq {
@@ -124,26 +92,66 @@ mod test {
     }
     pub(crate) use assert_autofloat_eq;
 
-    pub(crate) fn compute_numeric_derivative<F>(x: f64, func: F) -> f64
-    where
-        F: Fn(f64) -> f64,
-    {
-        // use a central differences approach
-        let two_eps = f64::EPSILON.sqrt();
-        let eps = 0.5 * two_eps;
-        let forward = func(x + eps);
-        let backward = func(x - eps);
+    #[cfg(feature = "float_impl")]
+    mod float_impl {
+        use core::f64;
 
-        (forward - backward) / two_eps
+        macro_rules! assert_near {
+            ($lhs:expr, $rhs:expr, $eps:expr) => {{
+                let lhs = &$lhs;
+                let rhs = &$rhs;
+                let eps = $eps;
+                let diff = (*lhs - *rhs).abs();
+                assert!(
+                    diff < eps,
+                    "assertion `(left ~= right) failed` \n\
+                 left: {:?} \n\
+                 right: {:?} \n\
+                 difference {:?} is greater than epsilon {:?}",
+                    *lhs,
+                    *rhs,
+                    diff,
+                    eps
+                );
+            }};
+        }
+        pub(crate) use assert_near;
+
+        macro_rules! assert_autofloat_near {
+            ($lhs:expr, $rhs:expr, $eps:expr) => {{
+                assert_near!($lhs.x, $rhs.x, $eps);
+                for (&l, &r) in $lhs.dx.iter().zip($rhs.dx.iter()) {
+                    assert_near!(l, r, $eps);
+                }
+            }};
+        }
+        pub(crate) use assert_autofloat_near;
+
+        pub(crate) fn compute_numeric_derivative<F>(x: f64, func: F) -> f64
+        where
+            F: Fn(f64) -> f64,
+        {
+            // use a central differences approach
+            let two_eps = f64::EPSILON.sqrt();
+            let eps = 0.5 * two_eps;
+            let forward = func(x + eps);
+            let backward = func(x - eps);
+
+            (forward - backward) / two_eps
+        }
+
+        macro_rules! execute_numeric_test {
+            ($x:expr, $func:tt) => {{
+                let eps = 1e-6;
+                let actual = AutoFloat2::variable($x, 0).$func();
+                let deriv = compute_numeric_derivative($x, |v| v.$func());
+                assert_autofloat_near!(actual, AutoFloat::new($x.$func(), [deriv, 0.0]), eps);
+            }};
+        }
+
+        pub(crate) use execute_numeric_test;
     }
 
-    macro_rules! execute_numeric_test {
-        ($x:expr, $func:tt) => {{
-            let eps = 1e-6;
-            let actual = AutoFloat2::variable($x, 0).$func();
-            let deriv = compute_numeric_derivative($x, |v| v.$func());
-            assert_autofloat_near!(actual, AutoFloat::new($x.$func(), [deriv, 0.0]), eps);
-        }};
-    }
-    pub(crate) use execute_numeric_test;
+    #[cfg(feature = "float_impl")]
+    pub(crate) use float_impl::*;
 }
