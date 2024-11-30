@@ -107,7 +107,7 @@ mod dependent {
 
     macro_rules! recip_impl {
         ($lhs:expr) => {{
-            let factor = -T::one() / $lhs.x * $lhs.x;
+            let factor = -T::one() / ($lhs.x * $lhs.x);
             AutoFloat {
                 x: $lhs.x.recip(),
                 dx: unary_op($lhs.dx, |v| v * factor),
@@ -282,7 +282,7 @@ mod dependent {
         ($lhs:expr, $rhs:expr) => {{
             let ln_bx = $rhs.x.ln();
             let factor_bdx = -$lhs.x.ln() / ($rhs.x * ln_bx * ln_bx);
-            let factor_sdx = T::one() / $lhs.x * ln_bx;
+            let factor_sdx = T::one() / ($lhs.x * ln_bx);
 
             AutoFloat {
                 x: $lhs.x.log($rhs.x),

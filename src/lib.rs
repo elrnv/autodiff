@@ -82,12 +82,69 @@ mod simba;
 
 #[cfg(test)]
 mod test {
+    use num_traits::Float;
+
+    macro_rules! assert_near {
+        ($lhs:expr, $rhs:expr, $eps:expr) => {{
+            let lhs = &$lhs;
+            let rhs = &$rhs;
+            let eps = $eps;
+            let diff = (*lhs - *rhs).abs();
+            assert!(
+                diff < eps,
+                "assertion `(left ~= right) failed` \n\
+                 left: {:?} \n\
+                 right: {:?} \n\
+                 difference {:?} is greater than epsilon {:?}",
+                *lhs,
+                *rhs,
+                diff,
+                eps
+            );
+        }};
+    }
+    pub(crate) use assert_near;
+
+    macro_rules! assert_autofloat_near {
+        ($lhs:expr, $rhs:expr, $eps:expr) => {{
+            assert_near!($lhs.x, $rhs.x, $eps);
+            for (&l, &r) in $lhs.dx.iter().zip($rhs.dx.iter()) {
+                assert_near!(l, r, $eps);
+            }
+        }};
+    }
+    pub(crate) use assert_autofloat_near;
+
     /// Convenience macro for comparing `AutoFloats`s in full.
     macro_rules! assert_autofloat_eq {
-        ($lhs:expr, $rhs:expr $(,)?) => {
+        ($lhs:expr, $rhs:expr) => {
             assert_eq!($lhs.x, $rhs.x);
             assert_eq!($lhs.dx, $rhs.dx);
         };
     }
     pub(crate) use assert_autofloat_eq;
+
+    pub(crate) fn compute_numeric_derivative<T, F>(x: T, func: F) -> T
+    where
+        T: Float + Copy,
+        F: Fn(T) -> T,
+    {
+        // use a central differences approach
+        let two_eps = T::epsilon().sqrt();
+        let eps = T::from(0.5).unwrap() * two_eps;
+        let forward = func(x + eps);
+        let backward = func(x - eps);
+
+        (forward - backward) / two_eps
+    }
+
+    macro_rules! execute_numeric_test {
+        ($x:expr, $func:tt) => {{
+            let eps = 1e-6;
+            let actual = AutoFloat2::variable($x, 0).$func();
+            let deriv = compute_numeric_derivative($x, |v| v.$func());
+            assert_autofloat_near!(actual, AutoFloat::new($x.$func(), [deriv, 0.0]), eps);
+        }};
+    }
+    pub(crate) use execute_numeric_test;
 }

@@ -184,7 +184,12 @@ where
     }
 
     fn abs(self) -> Self::RealField {
-        self.modulus()
+        let r = self.real();
+        if r >= Self::RealField::zero() {
+            r
+        } else {
+            -r
+        }
     }
 
     fn mul_add(self, a: Self, b: Self) -> Self {
@@ -400,8 +405,16 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::{test::assert_autofloat_eq, AutoFloat};
-    use nalgebra::{ComplexField, Matrix3, Vector3};
+    use super::*;
+    use crate::{
+        test::{
+            assert_autofloat_eq, assert_autofloat_near, assert_near, compute_numeric_derivative,
+            execute_numeric_test,
+        },
+        AutoFloat, AutoFloat2,
+    };
+    use nalgebra::{Matrix3, Vector3};
+
     fn make_matrix() -> Matrix3<AutoFloat<f64, 3>> {
         [
             [
@@ -445,5 +458,234 @@ mod tests {
         for (a, e) in actual.iter().zip(expected.iter()) {
             assert_autofloat_eq!(e, a);
         }
+    }
+
+    #[test]
+    fn floor() {
+        let x = AutoFloat::new(0.2, [1.0, 2.0]).floor();
+        assert_autofloat_eq!(x, AutoFloat::new(0.2.floor(), [0.0, 0.0]));
+    }
+
+    #[test]
+    fn ceil() {
+        let x = AutoFloat::new(0.2, [1.0, 2.0]).ceil();
+        assert_autofloat_eq!(x, AutoFloat::new(0.2.ceil(), [0.0, 0.0]));
+    }
+
+    #[test]
+    fn round() {
+        let x = AutoFloat::new(0.2, [1.0, 2.0]).round();
+        assert_autofloat_eq!(x, AutoFloat::new(0.2.round(), [0.0, 0.0]));
+    }
+
+    #[test]
+    fn trunc() {
+        let x = AutoFloat::new(0.2, [1.0, 2.0]).trunc();
+        assert_autofloat_eq!(x, AutoFloat::new(0.2.trunc(), [0.0, 0.0]));
+    }
+
+    #[test]
+    fn fract() {
+        let x = AutoFloat::new(0.2, [1.0, 2.0]).fract();
+        assert_autofloat_eq!(x, AutoFloat::new(0.2.fract(), [1.0, 2.0]));
+    }
+
+    #[test]
+    fn abs() {
+        let x: f64 = -2.5;
+        execute_numeric_test!(x, abs);
+    }
+
+    #[test]
+    fn mul_add() {
+        let eps: f64 = 1e-6;
+        let a = -2.5;
+        let b = 1.2;
+        let c = 2.7;
+        let actual =
+            AutoFloat2::variable(a, 0).mul_add(AutoFloat2::constant(b), AutoFloat2::constant(c));
+        let deriv = compute_numeric_derivative(a, |v| v.mul_add(b, c));
+        assert_autofloat_near!(actual, AutoFloat::new(a.mul_add(b, c), [deriv, 0.0]), eps);
+    }
+
+    #[test]
+    fn recip() {
+        let x: f64 = -2.5;
+        execute_numeric_test!(x, recip);
+    }
+
+    #[test]
+    fn sin() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, sin);
+    }
+
+    #[test]
+    fn cos() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, cos);
+    }
+
+    #[test]
+    fn tan() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, tan);
+    }
+
+    #[test]
+    fn asin() {
+        let x: f64 = 0.634;
+        execute_numeric_test!(x, asin);
+    }
+
+    #[test]
+    fn acos() {
+        let x: f64 = 0.634;
+        execute_numeric_test!(x, acos);
+    }
+
+    #[test]
+    fn atan() {
+        let x: f64 = 0.634;
+        execute_numeric_test!(x, atan);
+    }
+
+    #[test]
+    fn atan2() {
+        let x = AutoFloat::new(2.0, [1.3, 0.5]);
+        let y = AutoFloat::new(3.0, [-1.0, 1.9]);
+        let v1 = y.atan2(x);
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(3.0.atan2(2.0), [-0.4538461538461539, 0.17692307692307693])
+        );
+    }
+    #[test]
+    fn sin_cos() {}
+
+    #[test]
+    fn sinh() {
+        let x: f64 = 0.253;
+        execute_numeric_test!(x, sinh);
+    }
+
+    #[test]
+    fn cosh() {
+        let x: f64 = 0.253;
+        execute_numeric_test!(x, cosh);
+    }
+
+    #[test]
+    fn tanh() {
+        let x: f64 = 0.253;
+        execute_numeric_test!(x, tanh);
+    }
+
+    #[test]
+    fn asinh() {
+        let x: f64 = 0.253;
+        execute_numeric_test!(x, asinh);
+    }
+
+    #[test]
+    fn acosh() {
+        let x: f64 = 1.533;
+        execute_numeric_test!(x, acosh);
+    }
+
+    #[test]
+    fn atanh() {
+        let x: f64 = 0.253;
+        execute_numeric_test!(x, atanh);
+    }
+
+    #[test]
+    fn log() {
+        let eps: f64 = 1e-6;
+        let x = 2.38;
+        let n = 1.2;
+        let actual = AutoFloat2::variable(x, 0).log(AutoFloat2::constant(n));
+        let deriv = compute_numeric_derivative(x, |v| v.log(n));
+        assert_autofloat_near!(actual, AutoFloat::new(x.log(n), [deriv, 0.0]), eps);
+    }
+
+    #[test]
+    fn log2() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, log2);
+    }
+
+    #[test]
+    fn log10() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, log10);
+    }
+
+    #[test]
+    fn ln() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, ln);
+    }
+
+    #[test]
+    fn ln_1p() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, ln_1p);
+    }
+
+    #[test]
+    fn sqrt() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, sqrt);
+    }
+
+    #[test]
+    fn cbrt() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, cbrt);
+    }
+
+    #[test]
+    fn exp() {
+        let v1 = AutoFloat::new(2.0, [1.3, 0.5]).exp();
+        assert_autofloat_eq!(
+            v1,
+            AutoFloat::new(2.0.exp(), [9.605772928609845, 3.694528049465325])
+        );
+
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, exp);
+    }
+
+    #[test]
+    fn exp2() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, exp2);
+    }
+
+    #[test]
+    fn exp_m1() {
+        let x: f64 = 2.38;
+        execute_numeric_test!(x, exp_m1);
+    }
+
+    #[test]
+    fn powi() {
+        let eps: f64 = 1e-6;
+        let x = 2.38;
+        let n = 5;
+        let actual = AutoFloat2::variable(x, 0).powi(n);
+        let deriv = compute_numeric_derivative(x, |v| v.powi(n));
+        assert_autofloat_near!(actual, AutoFloat::new(x.powi(n), [deriv, 0.0]), eps);
+    }
+
+    #[test]
+    fn powf() {
+        let eps: f64 = 1e-6;
+        let x = 2.38;
+        let n = 5.2;
+        let actual = AutoFloat2::variable(x, 0).powf(AutoFloat::constant(n));
+        let deriv = compute_numeric_derivative(x, |v| v.powf(n));
+        assert_autofloat_near!(actual, AutoFloat::new(x.powf(n), [deriv, 0.0]), eps);
     }
 }

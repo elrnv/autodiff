@@ -186,13 +186,13 @@ mod test {
         let minf = FloatCore::min(a.x, b.x);
         assert_autofloat_eq!(
             AutoFloat::new(minf, if minf == a.x { a.dx } else { b.dx }),
-            FloatCore::min(a, b),
+            FloatCore::min(a, b)
         );
 
         let maxf = FloatCore::max(a.x, b.x);
         assert_autofloat_eq!(
             AutoFloat::new(maxf, if maxf == a.x { a.dx } else { b.dx }),
-            FloatCore::max(a, b),
+            FloatCore::max(a, b)
         );
     }
 }
