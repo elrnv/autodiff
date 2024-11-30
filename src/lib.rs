@@ -43,29 +43,46 @@
 // This crate is licensed under the terms described in the README.md, which is located at the root
 // directory of this crate.
 
+/// This crate provides a library for performing efficient automatic differentiation in forward mode.
 ///
-/// This crate provides a library for performing automatic differentiation in forward mode.
+/// # Usage
 ///
-/// # Examples
+/// `autofloat`can compute derivatives for single and multivariate functions.
+/// The library provides a float-like type `AutoFloat` to automatically compute the derivate while the target function is computed.
 ///
-/// The following example differentiates a 1D function defined by a closure.
+/// First, make sure that the function for which you want to compute a derivate can handle the `AutoFloat` type (either by generics or explicitly).
+/// Then simply instantiate the variables for which you want to compute the derivative and pass them into your target function, that's it!
 ///
-/// ```rust
-/// ```
-///
-/// To compute the gradient of a function, use the function `grad` as follows:
-///
-/// ```rust
-/// ```
-///
-/// Compute a specific derivative of a multi-variable function:
+/// Here's a simple example, which computes the gradient of a function wrt. two input variables.
+/// The function is implemented using generics and can be used with different floating point types.
 ///
 /// ```rust
-/// ```
+/// use autofloat::AutoFloat2;
+/// use num_traits::float::FloatCore;
 ///
-/// The following example shows how to compute a Jacobian product and evaluate the function at the same time.
+/// // Define some target function for which we want to compute the derivative.
+/// // This variant is generic in T, but you could also use the `AutoFloat` type directly.
+/// fn quadratic_func<T>(x: T, y: T) -> T
+/// where
+///     T: FloatCore,
+/// {
+///     (x - T::one()) * (T::from(2).unwrap() * y - T::one())
+/// }
 ///
-/// ```
+/// fn main() {
+///     // Use AutoFloat2 because we use a 2-dimensional function and we want a 2-dimensional gradient.
+///     // The first parameter determines the value of the variable.
+///     // The second prameter determines the index of the derivative for this variable within the gradient vector.
+///     let x = AutoFloat2::variable(2.25, 0);
+///     let y = AutoFloat2::variable(-1.75, 1);
+///
+///     let result = quadratic_func(x, y);
+///
+///     println!(
+///         "result={} gradient_x={} gradient_y={}",
+///         result.x, result.dx[0], result.dx[1]
+///     );
+/// }
 /// ```
 mod autofloat;
 

@@ -8,11 +8,49 @@
 
 The library currently provides scalar datatypes to efficiently compute gradients.
 
-Optionally you can use the library with the `nalgebra` feature to compute gradients and jacobians using the (nalgebra)[https://github.com/dimforge/nalgebra] library.
+Optionally you can use the library with the `nalgebra` feature to compute gradients and jacobians using the [nalgebra](https://github.com/dimforge/nalgebra) library.
 
 # Usage
 
-# Examples
+`autofloat`can compute derivatives for single and multivariate functions.
+The library provides a float-like type `AutoFloat` to automatically compute the derivate while the target function is computed.
+
+First, make sure that the function for which you want to compute a derivate can handle the `AutoFloat` type (either by generics or explicitly).
+Then simply instantiate the variables for which you want to compute the derivative and pass them into your target function, that's it!
+
+Here's a simple example, which computes the gradient of a function wrt. two input variables.
+The function is implemented using generics and can be used with different floating point types.
+
+```rust
+use autofloat::AutoFloat2;
+use num_traits::float::FloatCore;
+
+// Define some target function for which we want to compute the derivative.
+// This variant is generic in T, but you could also use the `AutoFloat` type directly.
+fn quadratic_func<T>(x: T, y: T) -> T
+where
+    T: FloatCore,
+{
+    (x - T::one()) * (T::from(2).unwrap() * y - T::one())
+}
+
+fn main() {
+    // Use AutoFloat2 because we use a 2-dimensional function and we want a 2-dimensional gradient.
+    // The first parameter determines the value of the variable.
+    // The second prameter determines the index of the derivative for this variable within the gradient vector.
+    let x = AutoFloat2::variable(2.25, 0);
+    let y = AutoFloat2::variable(-1.75, 1);
+
+    let result = quadratic_func(x, y);
+
+    println!(
+        "result={} gradient_x={} gradient_y={}",
+        result.x, result.dx[0], result.dx[1]
+    );
+}
+```
+
+See also the `examples/`directory for more examples on the different options how to define target functions.
 
 # License
 
