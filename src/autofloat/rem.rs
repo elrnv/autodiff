@@ -30,7 +30,7 @@ where
     fn rem(self, rhs: T) -> Self::Output {
         AutoFloat {
             x: self.x % rhs,
-            dx: unary_op(self.dx, |v| v % rhs),
+            dx: self.dx,
         }
     }
 }
@@ -81,7 +81,6 @@ where
 {
     fn rem_assign(&mut self, rhs: f64) {
         self.x %= rhs;
-        self.dx.iter_mut().for_each(|v| (*v) %= rhs);
     }
 }
 
@@ -91,7 +90,6 @@ where
 {
     fn rem_assign(&mut self, rhs: f32) {
         self.x %= rhs;
-        self.dx.iter_mut().for_each(|v| (*v) %= rhs);
     }
 }
 

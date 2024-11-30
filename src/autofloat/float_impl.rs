@@ -44,40 +44,28 @@ pub(crate) use min_impl;
 mod dependent {
     macro_rules! floor_impl {
         ($lhs:expr) => {
-            AutoFloat {
-                x: $lhs.x.floor(),
-                dx: $lhs.dx,
-            }
+            AutoFloat::constant($lhs.x.floor())
         };
     }
     pub(crate) use floor_impl;
 
     macro_rules! ceil_impl {
         ($lhs:expr) => {
-            AutoFloat {
-                x: $lhs.x.ceil(),
-                dx: $lhs.dx,
-            }
+            AutoFloat::constant($lhs.x.ceil())
         };
     }
     pub(crate) use ceil_impl;
 
     macro_rules! round_impl {
         ($lhs:expr) => {
-            AutoFloat {
-                x: $lhs.x.round(),
-                dx: $lhs.dx,
-            }
+            AutoFloat::constant($lhs.x.round())
         };
     }
     pub(crate) use round_impl;
 
     macro_rules! trunc_impl {
         ($lhs:expr) => {
-            AutoFloat {
-                x: $lhs.x.trunc(),
-                dx: $lhs.dx,
-            }
+            AutoFloat::constant($lhs.x.trunc())
         };
     }
     pub(crate) use trunc_impl;
