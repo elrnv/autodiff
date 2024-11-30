@@ -6,51 +6,13 @@
 
 `autofloat` is a pure Rust library, which implements efficient automatic differentiation in forward mode.
 
-The library currently provides scalar datatypes to compute efficiently compute gradients.
-Optionally you can use the library with `nalgebra`support to compute gradients and jacobians.
+The library currently provides scalar datatypes to efficiently compute gradients.
 
-# Install
+Optionally you can use the library with the `nalgebra` feature to compute gradients and jacobians using the (nalgebra)[https://github.com/dimforge/nalgebra] library.
 
 # Usage
 
 # Examples
-
-The following example differentiates a 1D function defined by a closure.
-
-```rust
-    // Define a function `f(x) = e^{-0.5*x^2}`.
-    let f = |x: FT<f64>| (-x * x / F1::cst(2.0)).exp();
-
-    // Differentiate `f` at zero.
-    println!("{}", diff(f, 0.0)); // prints `0`
-```
-
-To compute the gradient of a function, use the function `grad` as follows:
-
-```rust
-    // Define a function `f(x,y) = x*y^2`.
-    let f = |x: &[FT<f64>]| x[0] * x[1] * x[1];
-
-    // Differentiate `f` at `(1,2)`.
-    let g = grad(f, &vec![1.0, 2.0]);
-    println!("({}, {})", g[0], g[1]); // prints `(4, 4)`
-```
-
-
-Compute a specific derivative of a multi-variable function:
-
-```rust
-     // Define a function `f(x,y) = x*y^2`.
-     let f = |v: &[FT<f64>]| v[0] * v[1] * v[1];
-
-     // Differentiate `f` at `(1,2)` with respect to `x` (the first unknown) only.
-     let v = vec![
-         F1::var(1.0), // Create a variable.
-         F1::cst(2.0), // Create a constant.
-     ];
-     println!("{}", f(&v).deriv()); // prints `4`
-```
-
 
 # License
 
@@ -60,6 +22,19 @@ This repository is licensed under either of
  * MIT License ([LICENSE-MIT](LICENSE-MIT) or https://opensource.org/licenses/MIT)
 
 at your option.
+
+# Contributing
+
+The easiest way to contribute is to log an issue for bugs or new features. I will then review and discuss the contents of ticket with you and eventually maybe implement it.
+
+A faster way to get your features or fixes into `autofloat` is to file a pull request. There are just a few rules you should adhere:
+
+* Provide a meaningful PR description
+* All CI checks of the PR must succeed, otherwise it will not be merged
+* Have a code coverage of at least 80% of the lines you want to contribute
+
+I will review the PR and we will discuss how and if your PR can be merged.
+If your PR might get large, feel free to log a ticket first and we can discuss the details before you implement everything.
 
 # Acknowledgements
 
