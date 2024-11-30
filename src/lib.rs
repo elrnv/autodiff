@@ -82,7 +82,7 @@ mod simba;
 
 #[cfg(test)]
 mod test {
-    use num_traits::Float;
+    use core::f64;
 
     macro_rules! assert_near {
         ($lhs:expr, $rhs:expr, $eps:expr) => {{
@@ -124,14 +124,13 @@ mod test {
     }
     pub(crate) use assert_autofloat_eq;
 
-    pub(crate) fn compute_numeric_derivative<T, F>(x: T, func: F) -> T
+    pub(crate) fn compute_numeric_derivative<F>(x: f64, func: F) -> f64
     where
-        T: Float + Copy,
-        F: Fn(T) -> T,
+        F: Fn(f64) -> f64,
     {
         // use a central differences approach
-        let two_eps = T::epsilon().sqrt();
-        let eps = T::from(0.5).unwrap() * two_eps;
+        let two_eps = f64::EPSILON.sqrt();
+        let eps = 0.5 * two_eps;
         let forward = func(x + eps);
         let backward = func(x - eps);
 
