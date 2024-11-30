@@ -3,7 +3,10 @@ use num_traits::{FloatConst, NumCast, Zero};
 use std::ops::{Div, Mul};
 
 use crate::autofloat::float_impl::*;
-use crate::{binary_op, unary_op, AutoFloat};
+use crate::{
+    autofloat::{binary_op, unary_op},
+    AutoFloat,
+};
 
 impl<T, const N: usize> RealField for AutoFloat<T, N>
 where

@@ -2,7 +2,7 @@ use std::num::FpCategory;
 
 use num_traits::{float::FloatCore, FloatConst, Zero};
 
-use crate::unary_op;
+use crate::autofloat::unary_op;
 
 use super::float_impl::*;
 use super::AutoFloat;

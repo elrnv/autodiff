@@ -1,6 +1,9 @@
 use std::ops::{Sub, SubAssign};
 
-use crate::{binary_op, unary_op, AutoFloat};
+use crate::{
+    autofloat::{binary_op, unary_op},
+    AutoFloat,
+};
 
 impl<T, const N: usize> Sub<AutoFloat<T, N>> for AutoFloat<T, N>
 where

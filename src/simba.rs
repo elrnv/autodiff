@@ -1,7 +1,7 @@
 use num_traits::Zero;
 use simba::scalar::{SubsetOf, SupersetOf};
 
-use crate::{unary_op, AutoFloat};
+use crate::{autofloat::unary_op, AutoFloat};
 
 impl<T, const N: usize> SubsetOf<AutoFloat<T, N>> for AutoFloat<T, N>
 where

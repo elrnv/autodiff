@@ -1,7 +1,7 @@
 use num_traits::{One, ToPrimitive, Zero};
 use std::{fmt::Display, ops::Neg};
 
-use crate::unary_op;
+use crate::autofloat::unary_op;
 
 /// A generic forward differentiation `Dual` number.
 #[derive(Debug, Copy, Clone)]

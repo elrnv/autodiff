@@ -3,7 +3,10 @@ use std::num::FpCategory;
 use num_traits::{Float, Zero};
 
 use super::float_impl::*;
-use crate::{binary_op, unary_op, AutoFloat};
+use crate::{
+    autofloat::{binary_op, unary_op},
+    AutoFloat,
+};
 
 impl<T, const N: usize> Float for AutoFloat<T, N>
 where

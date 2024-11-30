@@ -2,7 +2,10 @@ use std::ops::{Div, DivAssign, Mul, Sub, SubAssign};
 
 use num_traits::One;
 
-use crate::{binary_op, unary_op, AutoFloat};
+use crate::{
+    autofloat::{binary_op, unary_op},
+    AutoFloat,
+};
 
 impl<T, const N: usize> Div<AutoFloat<T, N>> for AutoFloat<T, N>
 where

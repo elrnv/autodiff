@@ -1,6 +1,9 @@
 use std::ops::{Add, AddAssign, Mul, MulAssign};
 
-use crate::{binary_op, unary_op, AutoFloat};
+use crate::{
+    autofloat::{binary_op, unary_op},
+    AutoFloat,
+};
 
 impl<T, const N: usize> Mul<AutoFloat<T, N>> for AutoFloat<T, N>
 where

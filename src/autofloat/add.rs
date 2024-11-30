@@ -4,7 +4,7 @@ use std::{
     ops::{Add, AddAssign},
 };
 
-use crate::{binary_op, AutoFloat};
+use crate::{autofloat::binary_op, AutoFloat};
 
 impl<T, const N: usize> Add<AutoFloat<T, N>> for AutoFloat<T, N>
 where

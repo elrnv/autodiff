@@ -2,7 +2,10 @@ use std::ops::{Div, Rem, RemAssign, Sub, SubAssign};
 
 use num_traits::One;
 
-use crate::{binary_op, unary_op, AutoFloat};
+use crate::{
+    autofloat::{binary_op, unary_op},
+    AutoFloat,
+};
 
 impl<T, const N: usize> Rem<AutoFloat<T, N>> for AutoFloat<T, N>
 where
