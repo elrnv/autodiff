@@ -9,7 +9,7 @@ use super::AutoFloat;
 
 impl<T, const N: usize> FloatConst for AutoFloat<T, N>
 where
-    T: FloatConst + Zero + Copy,
+    T: FloatConst + Zero + Clone,
 {
     fn E() -> Self {
         AutoFloat::constant(T::E())
@@ -78,7 +78,7 @@ where
 
 impl<T, const N: usize> FloatCore for AutoFloat<T, N>
 where
-    T: FloatCore + Copy + Default,
+    T: FloatCore + Clone,
 {
     fn infinity() -> Self {
         Self::constant(T::infinity())

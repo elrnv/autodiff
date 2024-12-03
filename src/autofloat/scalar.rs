@@ -34,7 +34,7 @@ impl<T, const N: usize> Display for AutoFloat<T, N> {
 
 impl<T, const N: usize> AutoFloat<T, N>
 where
-    T: Zero + One + Copy,
+    T: Zero + One + Clone,
 {
     /// Creates an `AutoFloat` as variable where the given dimension is set to one.
     ///
@@ -42,7 +42,7 @@ where
     ///
     /// Panics if the given dimension is greater than the gradient dimension.
     pub fn variable(x: T, dim: usize) -> Self {
-        let mut dx = [T::zero(); N];
+        let mut dx = std::array::from_fn(|_| T::zero());
         dx[dim] = T::one();
         Self { x, dx }
     }
@@ -50,23 +50,23 @@ where
 
 impl<T, const N: usize> AutoFloat<T, N>
 where
-    T: Zero + Copy,
+    T: Zero + Clone,
 {
     /// Creates an `AutoFloat` as constant with the given value and zero gradients.
     pub fn constant(x: T) -> Self {
         Self {
             x,
-            dx: [T::zero(); N],
+            dx: std::array::from_fn(|_| T::zero()),
         }
     }
 }
 
 impl<T, const N: usize> Default for AutoFloat<T, N>
 where
-    T: Default + Copy,
+    T: Default + Clone,
 {
     fn default() -> Self {
-        Self::new(T::default(), [T::default(); N])
+        Self::new(T::default(), std::array::from_fn(|_| T::default()))
     }
 }
 
@@ -86,7 +86,7 @@ impl<T: PartialOrd, const N: usize> PartialOrd<AutoFloat<T, N>> for AutoFloat<T,
 
 impl<T, const N: usize> From<T> for AutoFloat<T, N>
 where
-    T: Zero + Copy,
+    T: Zero + Clone,
 {
     fn from(x: T) -> Self {
         AutoFloat::constant(x)
@@ -123,7 +123,7 @@ where
 
 impl<T, const N: usize> Neg for AutoFloat<T, N>
 where
-    T: Neg<Output = T> + Copy + Default,
+    T: Neg<Output = T> + Clone,
 {
     type Output = Self;
 

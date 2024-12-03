@@ -8,7 +8,7 @@ use crate::{autofloat::binary_op, AutoFloat};
 
 impl<T, const N: usize> Add<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Add<Output = T> + Copy + Default,
+    T: Add<Output = T> + Clone,
 {
     type Output = Self;
 
@@ -78,7 +78,7 @@ where
 
 impl<T, const N: usize> Sum for AutoFloat<T, N>
 where
-    T: AddAssign + Zero + Copy + Default,
+    T: AddAssign + Zero + Clone,
 {
     fn sum<I>(iter: I) -> Self
     where
@@ -94,7 +94,7 @@ where
 
 impl<T, const N: usize> std::iter::Sum<T> for AutoFloat<T, N>
 where
-    T: AddAssign + Copy + Default + Zero,
+    T: AddAssign + Clone + Zero,
 {
     fn sum<I>(iter: I) -> Self
     where

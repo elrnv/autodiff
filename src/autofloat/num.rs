@@ -57,7 +57,7 @@ where
 
 impl<T, const N: usize> FromPrimitive for AutoFloat<T, N>
 where
-    T: FromPrimitive + Copy + Zero,
+    T: FromPrimitive + Clone + Zero,
 {
     fn from_isize(n: isize) -> Option<Self> {
         T::from_isize(n).map(AutoFloat::constant)
@@ -118,7 +118,7 @@ where
 
 impl<T, const N: usize> NumCast for AutoFloat<T, N>
 where
-    T: NumCast + Zero + Copy,
+    T: NumCast + Zero + Clone,
 {
     fn from<U: ToPrimitive>(n: U) -> Option<Self> {
         T::from(n).map(AutoFloat::constant)
@@ -127,7 +127,7 @@ where
 
 impl<T, const N: usize> Zero for AutoFloat<T, N>
 where
-    T: Zero + Copy + Default,
+    T: Zero + Clone,
 {
     fn zero() -> Self {
         AutoFloat::constant(T::zero())
@@ -140,7 +140,7 @@ where
 
 impl<T, const N: usize> One for AutoFloat<T, N>
 where
-    T: Copy + Default + Zero + One,
+    T: Zero + One + Clone,
 {
     fn one() -> Self {
         AutoFloat::constant(T::one())
@@ -149,7 +149,7 @@ where
 
 impl<T, const N: usize> Num for AutoFloat<T, N>
 where
-    T: Copy + Default + Zero + Num,
+    T: Zero + Num + Clone,
 {
     type FromStrRadixErr = T::FromStrRadixErr;
 
@@ -160,7 +160,7 @@ where
 
 impl<T, const N: usize> Signed for AutoFloat<T, N>
 where
-    T: Signed + Zero + Copy + Default + Num + PartialOrd,
+    T: Signed + Zero + Num + PartialOrd + Clone,
 {
     fn abs(&self) -> Self {
         if self.is_negative() {
@@ -193,7 +193,7 @@ where
 
 impl<T, const N: usize> Bounded for AutoFloat<T, N>
 where
-    T: Bounded + Zero + Copy,
+    T: Bounded + Zero + Clone,
 {
     fn min_value() -> Self {
         AutoFloat::constant(T::min_value())

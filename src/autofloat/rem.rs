@@ -9,7 +9,7 @@ use crate::{
 
 impl<T, const N: usize> Rem<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Copy + Default + Rem<Output = T> + Div<Output = T> + Sub<Output = T> + One,
+    T: Rem<Output = T> + Div<Output = T> + Sub<Output = T> + One + Clone,
 {
     type Output = Self;
 
@@ -26,7 +26,7 @@ where
 
 impl<T, const N: usize> Rem<T> for AutoFloat<T, N>
 where
-    T: Rem<Output = T> + Copy + Default,
+    T: Rem<Output = T> + Clone,
 {
     type Output = Self;
 

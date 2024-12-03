@@ -7,7 +7,7 @@ use crate::{
 
 impl<T, const N: usize> Mul<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Mul<Output = T> + Add<Output = T> + Copy + Default,
+    T: Mul<Output = T> + Add<Output = T> + Clone,
 {
     type Output = Self;
 
@@ -45,14 +45,14 @@ impl<const N: usize> Mul<AutoFloat<f32, N>> for f32 {
 
 impl<T, const N: usize> Mul<T> for AutoFloat<T, N>
 where
-    T: Mul<Output = T> + Copy + Default,
+    T: Mul<Output = T> + Clone,
 {
     type Output = Self;
 
     fn mul(self, rhs: T) -> Self::Output {
         AutoFloat {
-            x: self.x * rhs,
-            dx: unary_op(self.dx, |v| v * rhs),
+            x: self.x * rhs.clone(),
+            dx: unary_op(self.dx, |v| v * rhs.clone()),
         }
     }
 }

@@ -17,23 +17,24 @@ pub(crate) fn unary_op<T, V, F, const N: usize>(array: [T; N], func: F) -> [V; N
 where
     T: Clone,
     F: Fn(T) -> V,
-    V: Copy + Default,
 {
-    let mut result = [V::default(); N];
-    for (dst, src) in result.iter_mut().zip(array.into_iter()) {
-        *dst = func(src);
-    }
-    result
+    std::array::from_fn(|i| {
+        // safety: the arrays have the same length by compile-time constant
+        let x = unsafe { array.get_unchecked(i) };
+        func(x.clone())
+    })
 }
 
 pub(crate) fn binary_op<T, U, V, F, const N: usize>(lhs: [T; N], rhs: [U; N], func: F) -> [V; N]
 where
+    T: Clone,
+    U: Clone,
     F: Fn(T, U) -> V,
-    V: Copy + Default,
 {
-    let mut result = [V::default(); N];
-    for (dst, (l, r)) in result.iter_mut().zip(lhs.into_iter().zip(rhs.into_iter())) {
-        *dst = func(l, r);
-    }
-    result
+    std::array::from_fn(|i| {
+        // safety: the arrays have the same length by compile-time constant
+        let l = unsafe { lhs.get_unchecked(i) };
+        let r = unsafe { rhs.get_unchecked(i) };
+        func(l.clone(), r.clone())
+    })
 }

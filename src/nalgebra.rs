@@ -1,5 +1,7 @@
-use nalgebra::{convert, ComplexField, Field, RealField, SimdBool, SimdValue};
-use num_traits::{FloatConst, NumCast, Zero};
+use nalgebra::{
+    convert, ComplexField, DVector, Field, RealField, SVector, Scalar, SimdBool, SimdValue,
+};
+use num_traits::{FloatConst, NumCast, One, Zero};
 use std::ops::{Div, Mul};
 
 use crate::autofloat::float_impl::*;
@@ -10,7 +12,7 @@ use crate::{
 
 impl<T, const N: usize> RealField for AutoFloat<T, N>
 where
-    T: RealField + NumCast + FloatConst + Default + Copy,
+    T: RealField + NumCast + FloatConst + Clone,
 {
     fn is_sign_positive(&self) -> bool {
         self.x.is_sign_positive()
@@ -97,13 +99,8 @@ where
 
 impl<T, const N: usize> ComplexField for AutoFloat<T, N>
 where
-    T: ComplexField
-        + Mul<T::RealField, Output = T>
-        + Div<T::RealField, Output = T>
-        + Copy
-        + Default
-        + NumCast,
-    T::RealField: RealField + FloatConst + Copy + Default + NumCast + Zero,
+    T: ComplexField + Mul<T::RealField, Output = T> + Div<T::RealField, Output = T> + NumCast,
+    T::RealField: RealField + FloatConst + NumCast + Zero,
 {
     type RealField = AutoFloat<T::RealField, N>;
 
@@ -128,31 +125,33 @@ where
     }
 
     fn modulus(self) -> Self::RealField {
-        let x = self.x.modulus();
+        let x = self.x.clone().modulus();
         AutoFloat {
-            x: x,
+            x: x.clone(),
             dx: unary_op(self.dx, |v| {
-                (v.real() * v.real() + v.imaginary() * self.x.imaginary()) / x
+                (v.clone().real() * v.clone().real() + v.imaginary() * self.x.clone().imaginary())
+                    / x.clone()
             }),
         }
     }
 
     fn modulus_squared(self) -> Self::RealField {
         AutoFloat {
-            x: self.x.modulus_squared(),
+            x: self.x.clone().modulus_squared(),
             dx: unary_op(self.dx, |v| {
                 convert::<f64, T::RealField>(2.0)
-                    * (v.real() * self.x.real() + v.imaginary() * self.x.imaginary())
+                    * (v.clone().real() * self.x.clone().real()
+                        + v.imaginary() * self.x.clone().imaginary())
             }),
         }
     }
 
     fn argument(self) -> Self::RealField {
-        RealField::atan2(self.imaginary(), self.real())
+        RealField::atan2(self.clone().imaginary(), self.clone().real())
     }
 
     fn norm1(self) -> Self::RealField {
-        ComplexField::abs(self.real()) + ComplexField::abs(self.imaginary())
+        ComplexField::abs(self.clone().real()) + ComplexField::abs(self.clone().imaginary())
     }
 
     fn scale(self, factor: Self::RealField) -> Self {
@@ -308,7 +307,7 @@ where
     }
 
     fn powf(self, n: Self::RealField) -> Self {
-        let x = self.x.powf(n.x);
+        let x = self.x.clone().powf(n.x.clone());
         powf_impl!(self, n, x)
     }
 
@@ -317,7 +316,7 @@ where
     }
 
     fn powc(self, n: Self) -> Self {
-        let x = self.x.powc(n.x);
+        let x = self.x.clone().powc(n.x.clone());
         powf_impl!(self, n, x)
     }
 
@@ -327,14 +326,14 @@ where
 
     fn try_sqrt(self) -> Option<Self> {
         let sqrt = ComplexField::sqrt(self.x);
-        let denom = sqrt * convert::<f64, T>(2.0);
+        let denom = sqrt.clone() * convert::<f64, T>(2.0);
         if denom.is_zero() && Iterator::all(&mut self.dx.iter(), |v| v.is_zero()) {
             None
         } else {
             let factor = T::one() / denom;
             Some(AutoFloat {
-                x: sqrt.clone(),
-                dx: unary_op(self.dx, |v| v * factor),
+                x: sqrt,
+                dx: unary_op(self.dx, |v| v * factor.clone()),
             })
         }
     }
@@ -343,14 +342,14 @@ where
 impl<T, B, const N: usize> Field for AutoFloat<T, N>
 where
     B: SimdBool,
-    T: Copy + Default + Field<SimdBool = B, Element: Copy + Default>,
+    T: Clone + Field<SimdBool = B, Element: Clone>,
 {
 }
 
 impl<T, B, const N: usize> SimdValue for AutoFloat<T, N>
 where
     B: SimdBool,
-    T: SimdValue<SimdBool = B, Element: Copy + Default> + Copy + Default,
+    T: SimdValue<SimdBool = B, Element: Clone> + Clone,
 {
     type Element = AutoFloat<T::Element, N>;
     type SimdBool = B;
@@ -367,14 +366,14 @@ where
     fn extract(&self, i: usize) -> Self::Element {
         AutoFloat {
             x: self.x.extract(i),
-            dx: unary_op(self.dx, |v| v.extract(i)),
+            dx: unary_op(self.dx.clone(), |v| v.extract(i)),
         }
     }
 
     unsafe fn extract_unchecked(&self, i: usize) -> Self::Element {
         AutoFloat {
             x: self.x.extract_unchecked(i),
-            dx: unary_op(self.dx, |v| v.extract_unchecked(i)),
+            dx: unary_op(self.dx.clone(), |v| v.extract_unchecked(i)),
         }
     }
 
@@ -400,6 +399,44 @@ where
             x: self.x.select(cond, other.x),
             dx: binary_op(self.dx, other.dx, |l, r| l.select(cond, r)),
         }
+    }
+}
+
+impl<T, const N: usize> AutoFloat<T, N>
+where
+    T: Scalar + Zero + Clone,
+{
+    pub fn constant_svector(vec: &SVector<T, N>) -> SVector<Self, N> {
+        SVector::from_iterator(vec.iter().map(|v| Self::constant(v.clone())))
+    }
+
+    #[cfg(feature = "std")]
+    pub fn constant_dvector(vec: &DVector<T>) -> DVector<Self> {
+        DVector::from_iterator(vec.len(), vec.iter().map(|v| Self::constant(v.clone())))
+    }
+}
+
+impl<T, const N: usize> AutoFloat<T, N>
+where
+    T: Scalar + Zero + One + Clone,
+{
+    pub fn variable_svector(vec: &SVector<T, N>) -> SVector<Self, N> {
+        SVector::from_iterator(
+            vec.iter()
+                .enumerate()
+                .map(|(i, v)| Self::variable(v.clone(), i)),
+        )
+    }
+
+    #[cfg(feature = "std")]
+    pub fn variable_dvector(vec: &DVector<T>) -> DVector<Self> {
+        assert_eq!(vec.len(), N);
+        DVector::from_iterator(
+            vec.len(),
+            vec.iter()
+                .enumerate()
+                .map(|(i, v)| Self::variable(v.clone(), i)),
+        )
     }
 }
 

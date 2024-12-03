@@ -4,7 +4,7 @@ use num_traits::Zero;
 
 impl<T, const N: usize> AbsDiffEq for AutoFloat<T, N>
 where
-    T: PartialEq + AbsDiffEq<Epsilon = T> + Zero + Copy,
+    T: PartialEq + AbsDiffEq<Epsilon = T> + Zero + Clone,
 {
     type Epsilon = Self;
     fn default_epsilon() -> Self::Epsilon {
@@ -16,7 +16,7 @@ where
 }
 impl<T, const N: usize> RelativeEq for AutoFloat<T, N>
 where
-    T: PartialEq + RelativeEq<Epsilon = T> + Zero + Copy,
+    T: PartialEq + RelativeEq<Epsilon = T> + Zero + Clone,
 {
     fn default_max_relative() -> Self::Epsilon {
         AutoFloat::constant(T::default_max_relative())
@@ -33,7 +33,7 @@ where
 }
 impl<T, const N: usize> UlpsEq for AutoFloat<T, N>
 where
-    T: PartialEq + UlpsEq<Epsilon = T> + Zero + Copy,
+    T: PartialEq + UlpsEq<Epsilon = T> + Zero + Clone,
 {
     fn default_max_ulps() -> u32 {
         T::default_max_ulps()

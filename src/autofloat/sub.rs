@@ -7,7 +7,7 @@ use crate::{
 
 impl<T, const N: usize> Sub<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Sub<Output = T> + Copy + Default,
+    T: Sub<Output = T> + Clone,
 {
     type Output = Self;
 

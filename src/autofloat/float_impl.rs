@@ -94,9 +94,9 @@ mod float_impl {
     macro_rules! mul_add_impl {
         ($a:expr, $b:expr,$c:expr) => {{
             AutoFloat {
-                x: $a.x.mul_add($b.x, $c.x),
+                x: $a.x.clone().mul_add($b.x.clone(), $c.x.clone()),
                 dx: binary_op(
-                    binary_op($a.dx, $b.dx, |l, r| l * $b.x + r * $a.x),
+                    binary_op($a.dx, $b.dx, |l, r| l * $b.x.clone() + r * $a.x.clone()),
                     $c.dx,
                     |l, r| l + r,
                 ),
@@ -107,10 +107,10 @@ mod float_impl {
 
     macro_rules! recip_impl {
         ($lhs:expr) => {{
-            let factor = -T::one() / ($lhs.x * $lhs.x);
+            let factor = -T::one() / ($lhs.x.clone() * $lhs.x.clone());
             AutoFloat {
                 x: $lhs.x.recip(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -118,10 +118,10 @@ mod float_impl {
 
     macro_rules! sin_impl {
         ($lhs:expr) => {{
-            let cos_x = $lhs.x.cos();
+            let cos_x = $lhs.x.clone().cos();
             AutoFloat {
                 x: $lhs.x.sin(),
-                dx: unary_op($lhs.dx, |v| v * cos_x),
+                dx: unary_op($lhs.dx, |v| v * cos_x.clone()),
             }
         }};
     }
@@ -129,10 +129,10 @@ mod float_impl {
 
     macro_rules! cos_impl {
         ($lhs:expr) => {{
-            let sin_x = -$lhs.x.sin();
+            let sin_x = -$lhs.x.clone().sin();
             AutoFloat {
                 x: $lhs.x.cos(),
-                dx: unary_op($lhs.dx, |v| v * sin_x),
+                dx: unary_op($lhs.dx, |v| v * sin_x.clone()),
             }
         }};
     }
@@ -140,11 +140,11 @@ mod float_impl {
 
     macro_rules! tan_impl {
         ($lhs:expr) => {{
-            let tan_x = $lhs.x.tan();
-            let factor = tan_x * tan_x + T::one();
+            let tan_x = $lhs.x.clone().tan();
+            let factor = tan_x.clone() * tan_x.clone() + T::one();
             AutoFloat {
                 x: tan_x,
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -152,10 +152,10 @@ mod float_impl {
 
     macro_rules! asin_impl {
         ($lhs:expr) => {{
-            let factor = T::one() / (T::one() - $lhs.x * $lhs.x).sqrt();
+            let factor = T::one() / (T::one() - $lhs.x.clone() * $lhs.x.clone()).sqrt();
             AutoFloat {
                 x: $lhs.x.asin(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -163,10 +163,10 @@ mod float_impl {
 
     macro_rules! acos_impl {
         ($lhs:expr) => {{
-            let factor = -T::one() / (T::one() - $lhs.x * $lhs.x).sqrt();
+            let factor = -T::one() / (T::one() - $lhs.x.clone() * $lhs.x.clone()).sqrt();
             AutoFloat {
                 x: $lhs.x.acos(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -174,10 +174,10 @@ mod float_impl {
 
     macro_rules! atan_impl {
         ($lhs:expr) => {{
-            let factor = T::one() / ($lhs.x * $lhs.x + T::one());
+            let factor = T::one() / ($lhs.x.clone() * $lhs.x.clone() + T::one());
             AutoFloat {
                 x: $lhs.x.atan(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -185,10 +185,13 @@ mod float_impl {
 
     macro_rules! atan2_impl {
         ($lhs:expr, $rhs:expr) => {{
-            let factor = T::one() / ($lhs.x * $lhs.x + $rhs.x * $rhs.x);
+            let factor =
+                T::one() / ($lhs.x.clone() * $lhs.x.clone() + $rhs.x.clone() * $rhs.x.clone());
             AutoFloat {
-                x: $lhs.x.atan2($rhs.x),
-                dx: binary_op($lhs.dx, $rhs.dx, |l, r| (l * $rhs.x - r * $lhs.x) * factor),
+                x: $lhs.x.clone().atan2($rhs.x.clone()),
+                dx: binary_op($lhs.dx, $rhs.dx, |l, r| {
+                    (l * $rhs.x.clone() - r * $lhs.x.clone()) * factor.clone()
+                }),
             }
         }};
     }
@@ -198,13 +201,13 @@ mod float_impl {
         ($lhs:expr) => {{
             let (s, c) = $lhs.x.sin_cos();
             let sn = AutoFloat {
-                x: s,
-                dx: unary_op($lhs.dx, |v| v * c),
+                x: s.clone(),
+                dx: unary_op($lhs.dx.clone(), |v| v * c.clone()),
             };
             let s_neg = -s;
             let cn = AutoFloat {
                 x: c,
-                dx: unary_op($lhs.dx, |v| v * s_neg),
+                dx: unary_op($lhs.dx, |v| v * s_neg.clone()),
             };
             (sn, cn)
         }};
@@ -213,10 +216,10 @@ mod float_impl {
 
     macro_rules! sinh_impl {
         ($lhs:expr) => {{
-            let cosh_x = $lhs.x.cosh();
+            let cosh_x = $lhs.x.clone().cosh();
             AutoFloat {
                 x: $lhs.x.sinh(),
-                dx: unary_op($lhs.dx, |v| v * cosh_x),
+                dx: unary_op($lhs.dx, |v| v * cosh_x.clone()),
             }
         }};
     }
@@ -224,10 +227,10 @@ mod float_impl {
 
     macro_rules! cosh_impl {
         ($lhs:expr) => {{
-            let sinh_x = $lhs.x.sinh();
+            let sinh_x = $lhs.x.clone().sinh();
             AutoFloat {
                 x: $lhs.x.cosh(),
-                dx: unary_op($lhs.dx, |v| v * sinh_x),
+                dx: unary_op($lhs.dx, |v| v * sinh_x.clone()),
             }
         }};
     }
@@ -235,11 +238,11 @@ mod float_impl {
 
     macro_rules! tanh_impl {
         ($lhs:expr) => {{
-            let tanhx = $lhs.x.tanh();
-            let factor = T::one() - tanhx * tanhx;
+            let tanhx = $lhs.x.clone().tanh();
+            let factor = T::one() - tanhx.clone() * tanhx.clone();
             AutoFloat {
                 x: tanhx,
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -247,10 +250,10 @@ mod float_impl {
 
     macro_rules! asinh_impl {
         ($lhs:expr) => {{
-            let factor = T::one() / ($lhs.x * $lhs.x + T::one()).sqrt();
+            let factor = T::one() / ($lhs.clone().x * $lhs.clone().x + T::one()).sqrt();
             AutoFloat {
                 x: $lhs.x.asinh(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -258,10 +261,10 @@ mod float_impl {
 
     macro_rules! acosh_impl {
         ($lhs:expr) => {{
-            let factor = T::one() / ($lhs.x * $lhs.x - T::one()).sqrt();
+            let factor = T::one() / ($lhs.x.clone() * $lhs.x.clone() - T::one()).sqrt();
             AutoFloat {
-                x: $lhs.x.acosh(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                x: $lhs.x.clone().acosh(),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -269,10 +272,10 @@ mod float_impl {
 
     macro_rules! atanh_impl {
         ($lhs:expr) => {{
-            let factor = T::one() / (-$lhs.x * $lhs.x + T::one());
+            let factor = T::one() / (-$lhs.x.clone() * $lhs.x.clone() + T::one());
             AutoFloat {
                 x: $lhs.x.atanh(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -280,13 +283,16 @@ mod float_impl {
 
     macro_rules! log_impl {
         ($lhs:expr, $rhs:expr) => {{
-            let ln_bx = $rhs.x.ln();
-            let factor_bdx = -$lhs.x.ln() / ($rhs.x * ln_bx * ln_bx);
-            let factor_sdx = T::one() / ($lhs.x * ln_bx);
+            let ln_bx = $rhs.x.clone().ln();
+            let factor_bdx =
+                -$lhs.x.clone().ln() / ($rhs.x.clone() * ln_bx.clone() * ln_bx.clone());
+            let factor_sdx = T::one() / ($lhs.x.clone() * ln_bx);
 
             AutoFloat {
                 x: $lhs.x.log($rhs.x),
-                dx: binary_op($lhs.dx, $rhs.dx, |l, r| factor_bdx * r + factor_sdx * l),
+                dx: binary_op($lhs.dx, $rhs.dx, |l, r| {
+                    factor_bdx.clone() * r + factor_sdx.clone() * l
+                }),
             }
         }};
     }
@@ -308,10 +314,10 @@ mod float_impl {
 
     macro_rules! ln_impl {
         ($lhs:expr) => {{
-            let factor = $lhs.x.recip();
+            let factor = $lhs.x.clone().recip();
             AutoFloat {
                 x: $lhs.x.ln(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -319,10 +325,10 @@ mod float_impl {
 
     macro_rules! ln_1p_impl {
         ($lhs:expr) => {{
-            let factor = T::one() / ($lhs.x + T::one());
+            let factor = T::one() / ($lhs.x.clone() + T::one());
             AutoFloat {
                 x: $lhs.x.ln_1p(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -330,7 +336,7 @@ mod float_impl {
 
     macro_rules! sqrt_impl {
         ($lhs:expr) => {{
-            let denom = $lhs.x.sqrt() * T::from(2).unwrap();
+            let denom = $lhs.x.clone().sqrt() * T::from(2).unwrap();
             let factor = if denom.is_zero() {
                 T::zero()
             } else {
@@ -339,7 +345,7 @@ mod float_impl {
 
             AutoFloat {
                 x: $lhs.x.sqrt(),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -348,7 +354,7 @@ mod float_impl {
     macro_rules! cbrt_impl {
         ($lhs:expr) => {{
             let x_cbrt = $lhs.x.cbrt();
-            let denom = x_cbrt * x_cbrt * T::from(3).unwrap();
+            let denom = x_cbrt.clone() * x_cbrt.clone() * T::from(3).unwrap();
             let factor = if denom.is_zero() {
                 T::zero()
             } else {
@@ -357,7 +363,7 @@ mod float_impl {
 
             AutoFloat {
                 x: x_cbrt,
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -367,8 +373,8 @@ mod float_impl {
         ($lhs:expr) => {{
             let exp = $lhs.x.exp();
             AutoFloat {
-                x: exp,
-                dx: unary_op($lhs.dx, |v| v * exp),
+                x: exp.clone(),
+                dx: unary_op($lhs.dx, |v| v * exp.clone()),
             }
         }};
     }
@@ -377,10 +383,10 @@ mod float_impl {
     macro_rules! exp2_impl {
         ($lhs:expr) => {{
             let exp2 = $lhs.x.exp2();
-            let factor = T::from(2).unwrap().ln() * exp2;
+            let factor = T::from(2).unwrap().ln() * exp2.clone();
             AutoFloat {
                 x: exp2,
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -388,10 +394,10 @@ mod float_impl {
 
     macro_rules! powi_impl {
         ($lhs:expr, $rhs:expr) => {{
-            let factor = $lhs.x.powi($rhs - 1) * T::from($rhs).unwrap();
+            let factor = $lhs.x.clone().powi($rhs - 1) * T::from($rhs).unwrap();
             AutoFloat {
                 x: $lhs.x.powi($rhs),
-                dx: unary_op($lhs.dx, |v| v * factor),
+                dx: unary_op($lhs.dx, |v| v * factor.clone()),
             }
         }};
     }
@@ -400,23 +406,24 @@ mod float_impl {
     macro_rules! powf_impl {
         ($lhs:expr, $rhs:expr, $x:expr) => {{
             // Avoid division by zero.
-            let factor = if $lhs.x.is_zero() && $x.is_zero() {
+            let factor = if $lhs.x.clone().is_zero() && $x.is_zero() {
                 T::zero()
             } else {
-                $x * $rhs.x / $lhs.x
+                $x.clone() * $rhs.x.clone() / $lhs.x.clone()
             };
+            let lhs_ln = $lhs.x.ln();
 
             AutoFloat {
-                x: $x,
+                x: $x.clone(),
                 dx: binary_op($lhs.dx, $rhs.dx, |l, r| {
                     // Avoid imaginary values in the ln
                     let dn = if r.is_zero() {
                         T::zero()
                     } else {
-                        $lhs.x.ln() * r
+                        lhs_ln.clone() * r
                     };
 
-                    dn * $x + l * factor
+                    dn * $x.clone() + l * factor.clone()
                 }),
             }
         }};
@@ -425,10 +432,10 @@ mod float_impl {
 
     macro_rules! exp_m1_impl {
         ($lhs:expr) => {{
-            let exp_x = $lhs.x.exp();
+            let exp_x = $lhs.x.clone().exp();
             AutoFloat {
                 x: $lhs.x.exp_m1(),
-                dx: unary_op($lhs.dx, |v| v * exp_x),
+                dx: unary_op($lhs.dx, |v| v * exp_x.clone()),
             }
         }};
     }

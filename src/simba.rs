@@ -5,7 +5,7 @@ use crate::{autofloat::unary_op, AutoFloat};
 
 impl<T, const N: usize> SubsetOf<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: SubsetOf<T> + Copy + Default,
+    T: SubsetOf<T> + Clone,
 {
     fn to_superset(&self) -> Self {
         AutoFloat {
@@ -26,7 +26,7 @@ where
 
 impl<T, const N: usize> SubsetOf<T> for AutoFloat<T, N>
 where
-    T: SubsetOf<T> + Zero + Copy,
+    T: SubsetOf<T> + Zero + Clone,
 {
     fn to_superset(&self) -> T {
         self.x.to_superset()
@@ -41,7 +41,7 @@ where
 
 impl<T, const N: usize> SupersetOf<f32> for AutoFloat<T, N>
 where
-    T: SupersetOf<f32> + Zero + Copy,
+    T: SupersetOf<f32> + Zero + Clone,
 {
     fn is_in_subset(&self) -> bool {
         self.dx.iter().all(T::is_zero) && self.x.is_in_subset()
@@ -58,7 +58,7 @@ where
 
 impl<T, const N: usize> SupersetOf<f64> for AutoFloat<T, N>
 where
-    T: SupersetOf<f64> + Zero + Copy,
+    T: SupersetOf<f64> + Zero + Clone,
 {
     fn is_in_subset(&self) -> bool {
         self.dx.iter().all(T::is_zero) && self.x.is_in_subset()

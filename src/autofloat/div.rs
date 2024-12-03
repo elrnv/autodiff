@@ -9,7 +9,7 @@ use crate::{
 
 impl<T, const N: usize> Div<AutoFloat<T, N>> for AutoFloat<T, N>
 where
-    T: Div<Output = T> + Mul<Output = T> + Sub<Output = T> + One + Copy + Default,
+    T: Div<Output = T> + Mul<Output = T> + Sub<Output = T> + One + Clone,
 {
     type Output = Self;
 
@@ -26,14 +26,14 @@ where
 
 impl<T, const N: usize> Div<T> for AutoFloat<T, N>
 where
-    T: Div<Output = T> + Copy + Default,
+    T: Div<Output = T> + Clone,
 {
     type Output = Self;
 
     fn div(self, rhs: T) -> Self::Output {
         AutoFloat {
-            x: self.x / rhs,
-            dx: unary_op(self.dx, |v| v / rhs),
+            x: self.x / rhs.clone(),
+            dx: unary_op(self.dx, |v| v / rhs.clone()),
         }
     }
 }

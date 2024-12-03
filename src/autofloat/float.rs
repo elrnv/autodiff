@@ -10,7 +10,7 @@ use crate::{
 
 impl<T, const N: usize> Float for AutoFloat<T, N>
 where
-    T: Float + Zero + Copy + Default,
+    T: Float + Zero + Clone,
 {
     fn nan() -> Self {
         Self::constant(T::nan())
