@@ -406,7 +406,7 @@ impl<T, const N: usize> AutoFloat<T, N>
 where
     T: Scalar + Zero + Clone,
 {
-    pub fn constant_svector(vec: &SVector<T, N>) -> SVector<Self, N> {
+    pub fn constant_svector<const R: usize>(vec: &SVector<T, R>) -> SVector<Self, R> {
         SVector::from_iterator(vec.iter().map(|v| Self::constant(v.clone())))
     }
 
