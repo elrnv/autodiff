@@ -1,6 +1,6 @@
 [package]
 name = "autofloat"
-version = "1.0.1"
+version = "1.0.2"
 authors = ["Fabian Meyer <rookfighter@posteo.org"]
 license = "MIT OR Apache-2.0"
 description = "Pure Rust library for efficient automatic differentiation"
