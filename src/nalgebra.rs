@@ -1,7 +1,7 @@
 use nalgebra::{
     convert, ComplexField, DVector, Field, RealField, SVector, Scalar, SimdBool, SimdValue,
 };
-use num_traits::{FloatConst, NumCast, One, Zero};
+use num_traits::{NumCast, One, Zero};
 use std::ops::{Div, Mul};
 
 use crate::autofloat::float_impl::*;
@@ -12,7 +12,7 @@ use crate::{
 
 impl<T, const N: usize> RealField for AutoFloat<T, N>
 where
-    T: RealField + NumCast + FloatConst + Clone,
+    T: RealField + Clone + NumCast,
 {
     fn is_sign_positive(&self) -> bool {
         self.x.is_sign_positive()
@@ -43,49 +43,49 @@ where
     }
 
     fn pi() -> Self {
-        Self::PI()
+        Self::constant(T::pi())
     }
     fn two_pi() -> Self {
-        Self::TAU()
+        Self::constant(T::two_pi())
     }
     fn frac_pi_2() -> Self {
-        Self::FRAC_PI_2()
+        Self::constant(T::frac_2_pi())
     }
     fn frac_pi_3() -> Self {
-        Self::FRAC_PI_3()
+        Self::constant(T::frac_pi_3())
     }
     fn frac_pi_4() -> Self {
-        Self::FRAC_PI_4()
+        Self::constant(T::frac_pi_4())
     }
     fn frac_pi_6() -> Self {
-        Self::FRAC_PI_6()
+        Self::constant(T::frac_pi_6())
     }
     fn frac_pi_8() -> Self {
-        Self::FRAC_PI_8()
+        Self::constant(T::frac_pi_8())
     }
     fn frac_1_pi() -> Self {
-        Self::FRAC_1_PI()
+        Self::constant(T::frac_1_pi())
     }
     fn frac_2_pi() -> Self {
-        Self::FRAC_2_PI()
+        Self::constant(T::frac_2_pi())
     }
     fn frac_2_sqrt_pi() -> Self {
-        Self::FRAC_2_SQRT_PI()
+        Self::constant(T::frac_2_sqrt_pi())
     }
     fn e() -> Self {
-        Self::E()
+        Self::constant(T::e())
     }
     fn log2_e() -> Self {
-        Self::LOG2_E()
+        Self::constant(T::log2_e())
     }
     fn log10_e() -> Self {
-        Self::LOG10_E()
+        Self::constant(T::log10_e())
     }
     fn ln_2() -> Self {
-        Self::LN_2()
+        Self::constant(T::ln_2())
     }
     fn ln_10() -> Self {
-        Self::LN_10()
+        Self::constant(T::ln_10())
     }
 
     fn min_value() -> Option<Self> {
@@ -100,7 +100,7 @@ where
 impl<T, const N: usize> ComplexField for AutoFloat<T, N>
 where
     T: ComplexField + Mul<T::RealField, Output = T> + Div<T::RealField, Output = T> + NumCast,
-    T::RealField: RealField + FloatConst + NumCast + Zero,
+    T::RealField: RealField + Zero + NumCast,
 {
     type RealField = AutoFloat<T::RealField, N>;
 
@@ -256,11 +256,13 @@ where
     }
 
     fn log2(self) -> Self {
-        log2_impl!(self, <T::RealField as NumCast>::from(2).unwrap())
+        let two = <T::RealField as NumCast>::from(2).unwrap();
+        log2_impl!(self, two)
     }
 
     fn log10(self) -> Self {
-        log10_impl!(self, <T::RealField as NumCast>::from(10).unwrap())
+        let ten = <T::RealField as NumCast>::from(10).unwrap();
+        log10_impl!(self, ten)
     }
 
     fn ln(self) -> Self {
