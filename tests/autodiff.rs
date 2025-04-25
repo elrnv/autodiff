@@ -75,9 +75,51 @@ fn grad_test() {
 //    assert_eq!(df2.deriv().deriv().deriv(), 6.0);
 //}
 
-//#[test]
-//fn third_order_stress_test() {
+#[test]
+fn second_order_derivative() {
+    use approx::*;
+    type F2 = F<F<f64, f64>, f64>;
+
+    let x: f64 = 0.1;
+    let f = |x: F2| -> F2 {
+        // 1 + 2x + 3x^2 + 4x^3
+        let x2: F2 = x*x;
+        x*F2::cst(2.0) + x*x*F1::cst(3.0) + x2*x*F2::cst(4.0) + F2::cst(1.0)
+    };
+
+    let df = |x: F1| -> F1{
+        // 2 + 6x + 12x^2
+        x*6.0 + x*x*12.0 + 2.0
+    };
+
+    let ddf = |x: f64| -> f64 {
+        // 6 + 24x
+        x*24.0 + 6.0
+    };
+
+    let f_x = f(F2::var(x));
+    dbg!(x);
+    let df_x = df(F1::var(x));
+
+    println!("f(0.1) = {:?}", f_x.value());
+    assert_relative_eq!(f_x.value(), 1.234, max_relative = 1e-10);
+    assert_relative_eq!(f_x.deriv().value(), df_x.value(), max_relative = 1e-10);
+    assert_relative_eq!(
+        df_x.deriv(),
+        ddf(x),
+        max_relative = 1e-10
+    );
+    assert_relative_eq!(
+        f_x.deriv().deriv(),
+        ddf(x),
+        max_relative = 1e-10
+    );
+}
+
+// #[test]
+// fn third_order_stress_test() {
 //    use approx::*;
+//    type F3 = F<F<F<f64, f64>, f64>, f64>;
 //    let x: f64 = 0.1;
 //    let f = |x: F3| -> F3 {
 //        (x * 2.0f64 - (x / 0.5f64).mul_add(x % 3.0f64, x * 1.1f64) + 1.2_f64)
@@ -107,12 +149,12 @@ fn grad_test() {
 //            .acosh()
 //            .atanh()
 //    };
-//
+
 //    // For reference and verification, in Julia the equivalent function is:
 //    // f(x) = atanh(acosh(asinh(1/(tanh(cosh(sinh(atan(atan(acos(asin(tan(log10(log2(abs(log(x + 2.1, sqrt(abs(log(abs(cos(sin(x*2 - (x/0.5) * (x % 3) - x*1.1 + 1.2))))))^(x + 6))))))))), x + 1))))^2))))
-//
+
 //    let df = f(F3::var(x));
-//
+
 //    // The following test values were acquired using the ForwardDiff.jl Julia package.
 //    println!("f(0.1) = {:?}", df.value());
 //    assert_relative_eq!(df.value(), 0.4552286984773363, max_relative = 1e-10);
@@ -127,4 +169,4 @@ fn grad_test() {
 //        0.2618169445307168,
 //        max_relative = 1e-10
 //    );
-//}
+// }
